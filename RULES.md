@@ -17,7 +17,26 @@ Lines marked **[assumed]** were not specified and are my default; change them if
 | City | **Susturucu** | Optionally silences one player for the next day (they can still vote). **[assumed]** not himself. |
 | City | **Silahçı** | Once per game gives a gun to a player he trusts. |
 
-**Mafia guess:** at night the mafia may also guess "player X is role Y" (any city role). Right → that player also leaves; the mafia keeps the right. Wrong → the right is gone for the game. Nothing protects against it.
+### 12 players (4 mafia, 8 city) — the 9 above plus
+
+| Team | Role | Ability |
+|---|---|---|
+| Mafia | **Terörist** | If voted out during the day, he takes one living player with him (20 s to pick). |
+| City | **Pehlivan** | Two lives: the mafia kill fails twice, the third works. |
+| City | **Vatandaş** | No ability. |
+
+### 16 players (5 mafia, 11 city) — the 12 above plus
+
+| Team | Role | Ability |
+|---|---|---|
+| Mafia | **Mafya** | No ability, mafia team. |
+| City | **Fedai** | Once, at any moment of the day (speeches, defence, voting): he leaves the game and takes one player with him. Night falls immediately. |
+| City | **Vatandaş** ×2 | No ability. |
+
+**Sniper shield (all sizes):** the first mafia kill on the Keskin Nişancı fails; the second works.
+A Doktor save does not use up the Sniper's shield or a Pehlivan life.
+
+**Mafia guess:** at night the mafia may guess "player X is role Y" (any special city role, not Vatandaş). Right → that player also leaves. Every guess, right or wrong, uses one right: 1 per game with 9 or 12 players, 2 with 16. Nothing protects against it.
 
 **Gun:** the holder may use it once, during their own speaking turn. Target is mafia → that mafia leaves, no vote today, night starts. Target is city → everyone learns they are good, nobody leaves, night starts.
 **[assumed]** the gun works the same in a mafia player's hands.
@@ -41,4 +60,3 @@ Lines marked **[assumed]** were not specified and are my default; change them if
 **Winning:** city wins when every mafia is gone. Mafia wins when, as night falls, mafia ≥ city.
 Dead players stay as spectators and hear the day, but see roles only when the game ends.
 
-12- and 16-player rooms: "Yakında" (coming soon).

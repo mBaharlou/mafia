@@ -7,10 +7,10 @@ const { server } = require('./server');
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
-function playGame(url) {
+function playGame(url, size) {
   return new Promise((resolve, reject) => {
     const bots = [];
-    const seen = { phases: new Set(), mafiaMates: 0, challenge: false, gun: false };
+    const seen = { phases: new Set(), mafiaMates: 0, challenge: false, gun: false, fedai: false };
     const timeout = setTimeout(() => reject(new Error('game did not finish; phases seen: ' + [...seen.phases])), 60000);
     const done = (s) => { clearTimeout(timeout); bots.forEach(b => b.close()); resolve({ s, seen }); };
 
@@ -22,7 +22,9 @@ function playGame(url) {
         const me = s.me;
         if (s.phase === 'over') return i === 0 && done(s);
         if (s.phase === 'night' && s.night === 1 && me.team === 'mafia') seen.mafiaMates = Math.max(seen.mafiaMates, s.players.filter(p => p.mate).length);
+        if (s.revengeTargets) return c.emit('revenge', { target: pick(s.revengeTargets) });
         if (!me?.alive) return;
+        if (s.canFedai && Math.random() < 0.05) { seen.fedai = true; return c.emit('fedai', { target: pick(s.players.filter(p => p.alive && p.id !== s.myId)).id }); }
         if ((s.phase === 'speech' || s.phase === 'defense') && s.speaker.id === s.myId) {
           if (s.challenge?.status === 'pending') return c.emit('challengeAnswer', { accept: true });
           if (s.canShoot) { seen.gun = true; return c.emit('gun', { target: pick(s.players.filter(p => p.alive && p.id !== s.myId)).id }); }
@@ -41,26 +43,26 @@ function playGame(url) {
     };
 
     const host = bot(0);
-    host.once('joined', ({ code }) => { for (let i = 1; i < 9; i++) bot(i, code); });
-    host.emit('create', { name: 'Bot0', size: 9 });
+    host.once('joined', ({ code }) => { for (let i = 1; i < size; i++) bot(i, code); });
+    host.emit('create', { name: 'Bot0', size });
   });
 }
 
 test('bots play full games to the end', async () => {
   await new Promise(r => server.listen(0, r));
   const url = `http://localhost:${server.address().port}`;
-  const winners = {}, all = { phases: new Set(), challenge: false, gun: false };
-  for (let n = 0; n < 6; n++) {
-    const { s, seen } = await playGame(url);
+  const winners = {}, all = { phases: new Set(), challenge: false, gun: false, fedai: false };
+  for (const size of [9, 9, 9, 12, 12, 12, 16, 16, 16, 16]) {
+    const { s, seen } = await playGame(url, size);
     winners[s.winner] = (winners[s.winner] || 0) + 1;
     assert.ok(['city', 'mafia'].includes(s.winner));
-    assert.equal(seen.mafiaMates, 3, 'mafia see each other on night 1');
+    assert.equal(seen.mafiaMates, Math.floor(size / 3), 'mafia see each other on night 1');
     assert.ok(s.players.every(p => p.role), 'roles revealed at the end');
     seen.phases.forEach(p => all.phases.add(p));
-    all.challenge ||= seen.challenge; all.gun ||= seen.gun;
+    all.challenge ||= seen.challenge; all.gun ||= seen.gun; all.fedai ||= seen.fedai;
   }
-  console.log('winners', winners, 'phases', [...all.phases].join(','), 'challenge', all.challenge, 'gun', all.gun);
-  for (const p of ['starting', 'roles', 'speech', 'night', 'morning', 'vote', 'defense', 'revote', 'announce', 'over']) assert.ok(all.phases.has(p), 'phase seen: ' + p);
+  console.log('winners', winners, 'phases', [...all.phases].join(','), 'challenge', all.challenge, 'gun', all.gun, 'fedai', all.fedai);
+  for (const p of ['starting', 'roles', 'speech', 'night', 'morning', 'vote', 'defense', 'revote', 'announce', 'revenge', 'over']) assert.ok(all.phases.has(p), 'phase seen: ' + p);
   server.close();
   process.exit(0); // room cleanup timers would keep the process alive
 });

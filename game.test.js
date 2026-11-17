@@ -3,12 +3,7 @@ const assert = require('node:assert');
 const G = require('./game');
 
 // Fixed seating: p0 baba, p1 matador, p2 kotudoktor, p3 doktor, p4 nisanci, p5 buyucu, p6 gozcu, p7 susturucu, p8 silahci
-function fresh() {
-  const g = G.createGame(Array.from({ length: 9 }, (_, i) => ({ id: 'p' + i, name: 'P' + i })));
-  G.SETUPS[9].forEach((r, i) => { g.players[i].role = r; g.players[i].team = G.ROLES[r].team; });
-  g.night = 2;
-  return g;
-}
+const fresh = () => freshN(9);
 const isAlive = (g, id) => G.byId(g, id).alive;
 
 test('vote threshold', () => {
@@ -31,7 +26,7 @@ test('matador block cancels doctor save', () => {
   assert.ok(r.privateMsgs.some(m => m.to === 'p3'));
 });
 
-test('sniper: shield, bad doctor, wrong target', () => {
+test('sniper: baba shield, bad doctor, wrong target', () => {
   let g = fresh();
   G.resolveNight(g, { shot: 'p0' });
   assert.equal(isAlive(g, 'p0'), true);
@@ -59,14 +54,61 @@ test('gozcu sees baba as good, matador as mafia', () => {
   assert.match(r.privateMsgs[0].text, /MAFYA/);
 });
 
-test('mafia guess: right kills, wrong loses the right', () => {
-  const g = fresh();
+test('mafia guess: every guess spends a right', () => {
+  let g = fresh();
   G.resolveNight(g, { guess: { target: 'p6', role: 'gozcu' } });
   assert.equal(isAlive(g, 'p6'), false);
-  assert.equal(g.guessAvailable, true);
+  assert.equal(g.guessesLeft, 0);
+  assert.ok(!G.nightOptions(g, 'p0').some(o => o.type === 'guess'));
+  g = fresh();
   G.resolveNight(g, { guess: { target: 'p7', role: 'doktor' } });
   assert.equal(isAlive(g, 'p7'), true);
-  assert.equal(g.guessAvailable, false);
+  assert.equal(g.guessesLeft, 0);
+});
+
+// Fixed roles in SETUPS order (hoisted so fresh() above can use it).
+function freshN(n) {
+  const g = G.createGame(Array.from({ length: n }, (_, i) => ({ id: 'p' + i, name: 'P' + i })));
+  G.SETUPS[n].forEach((r, i) => { const p = g.players[i]; p.role = r; p.team = G.ROLES[r].team; p.armor = r === 'pehlivan' ? 2 : r === 'nisanci' ? 1 : 0; });
+  g.night = 2;
+  return g;
+}
+
+test('setups: one mafia per three players, guesses and shots scale', () => {
+  for (const n of [9, 12, 16]) {
+    const g = G.createGame(Array.from({ length: n }, (_, i) => ({ id: 'p' + i, name: 'P' + i })));
+    assert.equal(g.players.filter(p => p.team === 'mafia').length, Math.floor(n / 3), `${n} players`);
+    assert.equal(g.shotsLeft, Math.floor(n / 3) - 1);
+    assert.equal(g.guessesLeft, n === 16 ? 2 : 1);
+  }
+  const g = freshN(16);
+  assert.ok(!G.nightOptions(g, 'p0').find(o => o.type === 'guess').roles.includes('vatandas'));
+});
+
+test('sniper shield and pehlivan lives stop mafia kills', () => {
+  const g = freshN(12); // p4 nisanci, p10 pehlivan
+  G.resolveNight(g, { kill: 'p4' });
+  assert.equal(isAlive(g, 'p4'), true);
+  G.resolveNight(g, { kill: 'p4' });
+  assert.equal(isAlive(g, 'p4'), false);
+  G.resolveNight(g, { kill: 'p10' });
+  G.resolveNight(g, { kill: 'p10', save: 'p10' }); // doctor save does not cost a life
+  G.resolveNight(g, { kill: 'p10' });
+  assert.equal(isAlive(g, 'p10'), true);
+  G.resolveNight(g, { kill: 'p10' });
+  assert.equal(isAlive(g, 'p10'), false);
+});
+
+test('fedai and terrorist take someone along', () => {
+  const g = freshN(16); // p9 terorist, p13 fedai
+  assert.equal(G.fedaiStrike(g, 'p13', 'p0'), 'P0');
+  assert.equal(isAlive(g, 'p13'), false);
+  assert.equal(isAlive(g, 'p0'), false);
+  assert.equal(G.fedaiStrike(g, 'p13', 'p1'), null);
+  assert.equal(G.terroristRevenge(g, 'p9', 'p5'), null); // only after being voted out
+  G.byId(g, 'p9').alive = false;
+  assert.equal(G.terroristRevenge(g, 'p9', 'p5'), 'P5');
+  assert.equal(isAlive(g, 'p5'), false);
 });
 
 test('doctor: self once, max two nights in a row', () => {

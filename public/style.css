@@ -174,12 +174,6 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 
 /* stage: narrator behind a lit card table, players around it */
 .stage { position: relative; width: 100%; max-height: calc(100vh - 110px); aspect-ratio: 16 / 11; margin: 0 auto; align-self: center; }
-@media (max-width: 980px) {
-  .stage { aspect-ratio: 1 / 1.05; max-height: none; }
-  .seat { width: 14%; }
-  .seat .plate { font-size: 11px; padding: 2px 6px; max-width: 24vw; }
-  #action { order: -1; } /* what to do now comes first on phones */
-}
 .stage-light { position: absolute; inset: -6% 8% 0; background: radial-gradient(ellipse 45% 55% at 50% 42%, var(--spot), transparent 70%); pointer-events: none; }
 .stage-narrator { position: absolute; left: 50%; top: -3%; height: 54%; aspect-ratio: 320 / 460; transform: translateX(-50%); z-index: 1; filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .7)); transition: transform .6s, filter .6s; }
 .stage-narrator svg { width: 100%; height: 100%; }
@@ -194,6 +188,9 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
 
 .seat { position: absolute; width: 9.5%; transform: translate(-50%, -50%); text-align: center; z-index: 3; transition: opacity .4s, transform .3s; }
+.stage[data-size="12"] .seat { width: 8%; }
+.stage[data-size="16"] .seat { width: 6.6%; }
+.stage[data-size="16"] .plate { font-size: clamp(10px, .95vw, 13px); padding: 2px 7px; }
 .portrait { position: relative; width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: visible; }
 .portrait .pic { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; border: 3px solid rgba(255, 255, 255, .18); box-shadow: 0 10px 24px rgba(0, 0, 0, .6); transition: border-color .3s, box-shadow .3s, filter .4s; }
 .portrait .pic svg { width: 100%; height: 100%; display: block; }
@@ -284,5 +281,15 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .flip.on .back { transform: rotateY(-180deg); }
 .flip.on .front { transform: rotateY(0); }
 #revealOk { width: auto; padding: 14px 40px; font-size: 18px; }
+
+/* phones: kept last so it overrides the seat sizes above */
+@media (max-width: 980px) {
+  .stage { aspect-ratio: 1 / 1.05; max-height: none; }
+  .stage .seat { width: 14%; }
+  .stage[data-size="12"] .seat { width: 11.5%; }
+  .stage[data-size="16"] .seat { width: 9.5%; }
+  .stage .seat .plate { font-size: 11px; padding: 2px 6px; max-width: 24vw; }
+  #action { order: -1; } /* what to do now comes first on phones */
+}
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .cine.show { opacity: 1; } }

@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SAVE_KEY = 'mafya-session';
 
-let state = null, prevPhase = null, receivedAt = 0, guessRole = null, shooting = false, roleHidden = false, openRooms = [];
+let state = null, prevPhase = null, receivedAt = 0, guessRole = null, shooting = false, sacrificing = false, roleHidden = false, openRooms = [];
 const voice = new Voice(socket);
 
 // ---------- art ----------
@@ -87,7 +87,7 @@ function showHome() {
 const PHASES = {
   lobby: ['Bekleme salonu', 'Masa doluyor'], starting: ['Hazırlan', 'Oyun başlıyor'], roles: ['Roller', 'Rolüne bak, kimseye söyleme'],
   speech: ['Gündüz', 'Konuşma turu'], defense: ['Savunma', 'Son sözler'], vote: ['Oylama', 'Kim çıksın?'], revote: ['Son oylama', 'Karar anı'],
-  poll: ['Soru', 'Dışarıdakiler'], morning: ['Sabah', 'Şehir uyanıyor'], announce: ['Duyuru', ''], coin: ['Yazı tura', 'Şans karar verecek'],
+  poll: ['Soru', 'Dışarıdakiler'], revenge: ['İntikam', 'Terörist son hamlesini yapıyor'], morning: ['Sabah', 'Şehir uyanıyor'], announce: ['Duyuru', ''], coin: ['Yazı tura', 'Şans karar verecek'],
   night: ['Gece', 'Şehir uyuyor'], over: ['Oyun bitti', ''],
 };
 const DARK = ['lobby', 'starting', 'roles', 'night', 'over'];
@@ -121,15 +121,17 @@ function renderSeats(s) {
   const stage = $('stage');
   stage.querySelectorAll('.seat').forEach(e => e.remove());
   const n = s.size;
+  stage.dataset.size = n;
+  const span = { 9: 280, 12: 296, 16: 310 }[n] || 300, big = n > 9 ? 2 : 0;
   s.players.forEach(p => {
     // seats run clockwise around the table, leaving the top free for the narrator
-    const deg = -50 + p.seat * 280 / (n - 1);
+    const deg = -90 + (360 - span) / 2 + p.seat * span / (n - 1);
     const a = deg * Math.PI / 180;
     const el = document.createElement('div');
     const speaking = s.speaker?.id === p.id;
     el.className = 'seat' + (p.id === s.myId ? ' me' : '') + (!p.alive ? ' dead' : '') + (p.mate ? ' mate' : '') + (speaking ? ' speaking' : '');
-    el.style.left = 50 + 42 * Math.cos(a) + '%';
-    el.style.top = 58 + 34 * Math.sin(a) + '%';
+    el.style.left = 50 + (42 + big) * Math.cos(a) + '%';
+    el.style.top = 58 + (34 + big) * Math.sin(a) + '%';
     const role = p.role && s.roles[p.role];
     const votes = s.vote?.counts[p.id];
     const showRole = role && (s.phase === 'over' || p.id !== s.myId);
@@ -202,6 +204,11 @@ function renderAction(s) {
       html += `<div class="vote-bars">${v.candidates.map(id => `<div class="vote-bar ${v.counts[id] >= v.need ? 'hit' : ''}"><span>${esc(nameOf(id))}</span><span class="track"><span class="fill" style="width:${Math.min(100, v.counts[id] / v.need * 100)}%"></span></span><b>${v.counts[id]}/${v.need}</b></div>`).join('')}</div>`;
       break;
     }
+    case 'revenge':
+      html = s.revengeTargets
+        ? `<p class="big">💣 Kimi yanında götürüyorsun?</p><p class="soft">Oylamayla çıktın ama son hamle senin. Seçtiğin kişi de oyundan çıkar.</p>${targetButtons(s.revengeTargets, null, true).replaceAll('data-t=', 'data-r=')}`
+        : '<p class="big">💣 Terörist son hamlesini yapıyor…</p><p class="soft">Yanında kimi götüreceğini seçiyor.</p>';
+      break;
     case 'poll':
       html = '<p class="big">❓ Dışarıdakiler</p><p class="soft">Çıkanların kaçı şehir, kaçı mafya öğrenmek ister misin? (Kim olduğu söylenmez.)</p>';
       if (alive) html += `<div class="btns"><button class="${s.poll.mine === true ? 'btn-gold' : 'btn-ghost'}" id="pollYes">EVET</button><button class="${s.poll.mine === false ? 'btn-gold' : 'btn-ghost'}" id="pollNo">HAYIR</button></div>`;
@@ -231,6 +238,9 @@ function renderAction(s) {
       break;
     default: html = `<p class="big">${esc(s.narrator)}</p>`;
   }
+  if (s.canFedai) html += sacrificing
+    ? `<div class="callout"><b>🧨 Kimi yanında götürüyorsun?</b><p class="soft">Sen ve seçtiğin kişi oyundan çıkarsınız, sonra hemen gece olur.</p>${targetButtons(s.players.filter(p => p.alive && p.id !== s.myId).map(p => p.id), null, true).replaceAll('data-t=', 'data-f=')}<div class="btns"><button class="btn-ghost btn-sm" id="noFedai">VAZGEÇ</button></div></div>`
+    : '<div class="btns"><button class="btn-danger" id="fedai">🧨 KENDİNİ FEDA ET</button></div>';
   if (s.deadReveal) html += `<p class="soft" style="margin-top:10px">Dışarıda: <b class="c-city">${s.deadReveal.city} şehir</b>, <b class="c-mafia">${s.deadReveal.mafia} mafya</b>.</p>`;
   $('action').innerHTML = deadNote + html;
   wireAction(s);
@@ -248,6 +258,14 @@ function wireAction(s) {
   on('pollYes', () => socket.emit('poll', { yes: true }));
   on('pollNo', () => socket.emit('poll', { yes: false }));
   on('restart', () => socket.emit('restart'));
+  on('fedai', () => { sacrificing = true; renderAction(state); });
+  on('noFedai', () => { sacrificing = false; renderAction(state); });
+  $('action').querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
+    if (confirm(`Kendini feda edip ${nameOf(b.dataset.f)} oyuncusunu da götürmek istediğine emin misin?`)) { sacrificing = false; socket.emit('fedai', { target: b.dataset.f }); }
+  });
+  $('action').querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
+    if (confirm(`${nameOf(b.dataset.r)} oyuncusunu yanında götürmek istediğine emin misin?`)) socket.emit('revenge', { target: b.dataset.r });
+  });
   const sel = $('guessRole');
   if (sel) sel.onchange = () => { guessRole = sel.value; };
   $('action').querySelectorAll('[data-t]').forEach(b => b.onclick = () => {

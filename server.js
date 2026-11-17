@@ -5,8 +5,9 @@ const { Server } = require('socket.io');
 const G = require('./game');
 
 const SCALE = Number(process.env.TIME_SCALE || 1); // tests run with a tiny scale
-const SECS = { starting: 10, roles: 8, speech: 50, challenge: 30, defense: 50, firstNight: 20, night: 45, morning: 8, poll: 15, vote: 30, revote: 25, announce: 6, coin: 5 };
-const SIZES = [9]; // 12 and 16 are "Yakında" in the UI
+const SECS = { starting: 10, roles: 8, speech: 50, challenge: 30, defense: 50, firstNight: 20, night: 45, morning: 8, poll: 15, vote: 30, revote: 25, announce: 6, coin: 5, revenge: 20 };
+const SIZES = Object.keys(G.SETUPS).map(Number);
+const DAY_PHASES = ['speech', 'defense', 'vote', 'revote']; // when the Fedai may strike
 
 const app = express();
 app.use(express.static(__dirname + '/public'));
@@ -143,9 +144,13 @@ class Room {
   }
 
   eliminate(id) {
-    G.byId(this.g, id).alive = false;
+    const p = G.byId(this.g, id);
+    p.alive = false;
     this.g.deadSeen = true;
-    this.announce(`${this.name(id)} oylamayla oyundan çıktı.`, () => this.startNight());
+    if (p.role !== 'terorist') return this.announce(`${p.name} oylamayla oyundan çıktı.`, () => this.startNight());
+    this.revengeBy = id;
+    this.set('revenge', SECS.revenge, () => this.announce(`💣 ${p.name} kimseyi yanında götürmedi.`, () => this.startNight()),
+      `${p.name} oylamayla çıktı… ama o bir TERÖRİST! 💣 Yanında birini götürecek.`);
   }
 
   announce(text, next) {
@@ -228,6 +233,19 @@ class Room {
         this.speaker = null;
         return this.announce(r.mafia ? `💥 ${me.name}, ${r.name} oyuncusunu vurdu: MAFYA çıktı! Oyundan çıktı. Gece oluyor.`
           : `💥 ${me.name}, ${r.name} oyuncusunu vurdu: İYİ çıktı. Kimse çıkmıyor. Gece oluyor.`, () => this.startNight());
+      }
+      case 'fedai': {
+        if (!DAY_PHASES.includes(this.phase)) return;
+        const target = G.fedaiStrike(g, p.id, data.target);
+        if (!target) return;
+        this.speaker = null;
+        return this.announce(`🧨 ${me.name} kendini feda etti ve ${target} oyuncusunu da yanında götürdü! Gece oluyor.`, () => this.startNight());
+      }
+      case 'revenge': {
+        if (this.phase !== 'revenge' || this.revengeBy !== p.id) return;
+        const target = G.terroristRevenge(g, p.id, data.target);
+        if (!target) return;
+        return this.announce(`💣 ${me.name}, ${target} oyuncusunu da yanında götürdü!`, () => this.startNight());
       }
       case 'vote':
         if ((this.phase === 'vote' || this.phase === 'revote') && me?.alive && Array.isArray(data.targets)) {
@@ -321,6 +339,8 @@ class Room {
       v.vote = { candidates: this.candidates, counts: t.count, need: t.need, mine: this.votes[p.id] || [] };
     }
     if (this.phase === 'poll') v.poll = { mine: this.poll[p.id] };
+    v.canFedai = me.alive && me.role === 'fedai' && !g.fedaiUsed && DAY_PHASES.includes(this.phase);
+    if (this.phase === 'revenge' && this.revengeBy === p.id) v.revengeTargets = G.alive(g).map(x => x.id);
     if (this.phase === 'night') {
       v.options = G.nightOptions(g, p.id).map(o => ({ ...o, chosen: this.chosen[p.id]?.[o.type] || null }));
       if (mafiaEyes) v.mafiaKill = this.actions.kill || null;
@@ -399,7 +419,7 @@ io.on('connection', socket => {
     if (target?.socketId) io.to(target.socketId).emit('rtc', { from: player.id, data });
   });
 
-  for (const ev of ['endSpeech', 'challengeRequest', 'challengeAnswer', 'gun', 'vote', 'poll', 'action', 'mafiaChat', 'restart']) {
+  for (const ev of ['endSpeech', 'challengeRequest', 'challengeAnswer', 'gun', 'fedai', 'revenge', 'vote', 'poll', 'action', 'mafiaChat', 'restart']) {
     socket.on(ev, data => { if (room && player) room.handle(player, ev, data); });
   }
 

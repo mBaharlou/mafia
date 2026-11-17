@@ -5,14 +5,21 @@ const ROLES = {
   matador:    { team: 'mafia', name: 'Matador',        icon: '🎭', desc: 'Her gece şehirden birinin yeteneğini o gece için kapatırsın. Aynı kişiyi üst üste iki gece seçemezsin.' },
   kotudoktor: { team: 'mafia', name: 'Kötü Doktor',    icon: '💉', desc: 'Her gece bir mafyayı (kendin dahil) Keskin Nişancı\'ya karşı korursun.' },
   doktor:     { team: 'city',  name: 'Doktor',         icon: '🩺', desc: 'Her gece birini mafyadan korursun. Kendini sadece bir kez koruyabilirsin. Aynı kişiyi en fazla iki gece üst üste korursun.' },
-  nisanci:    { team: 'city',  name: 'Keskin Nişancı', icon: '🎯', desc: 'Gece bir kişiyi vurabilirsin (gecede en fazla 1). Mafyayı vurursan çıkar; iyi birini vurursan sen çıkarsın.' },
+  nisanci:    { team: 'city',  name: 'Keskin Nişancı', icon: '🎯', desc: 'Gece bir kişiyi vurabilirsin (gecede en fazla 1). Mafyayı vurursan çıkar; iyi birini vurursan sen çıkarsın. Mafya seni bir kez öldüremez (kalkan).' },
   buyucu:     { team: 'city',  name: 'Büyücü',         icon: '🔮', desc: 'Oyunda bir kez, ölen birini geri getirirsin. Mafyayı getirirsen herkes öğrenir.' },
   gozcu:      { team: 'city',  name: 'Gözcü',          icon: '👁️', desc: 'Her gece birini sorarsın: mafya mı, iyi mi? Baba iyi görünür. Rolünü belli etme!' },
   susturucu:  { team: 'city',  name: 'Susturucu',      icon: '🤐', desc: 'İstersen her gece birini seçersin; ertesi gün konuşamaz (oy verebilir).' },
   silahci:    { team: 'city',  name: 'Silahçı',        icon: '🔫', desc: 'Oyunda bir kez, güvendiğin birine silah verirsin. O kişi gündüz sırası gelince silahı kullanabilir.' },
+  terorist:   { team: 'mafia', name: 'Terörist',       icon: '💣', desc: 'Gündüz oylamayla asılırsan, çıkarken birini de yanında götürürsün.' },
+  mafya:      { team: 'mafia', name: 'Mafya',          icon: '🕶️', desc: 'Özel yeteneğin yok. Mafya takımındasın: gece arkadaşlarınla konuş, gündüz kimseye belli etme.' },
+  pehlivan:   { team: 'city',  name: 'Pehlivan',       icon: '💪', desc: 'İki canın var: mafya seni iki kez öldürmeye çalışsa da ölmezsin, üçüncüde ölürsün.' },
+  fedai:      { team: 'city',  name: 'Fedai',          icon: '🧨', desc: 'Gündüz istediğin an (bir kez) kendini feda edersin: oyundan çıkarsın ama birini de yanında götürürsün. Sonra hemen gece olur.' },
+  vatandas:   { team: 'city',  name: 'Vatandaş',       icon: '🙂', desc: 'Özel yeteneğin yok. Dinle, konuş, doğru kişiye oy ver: şehir seninle kazanır.' },
 };
 
-const SETUPS = { 9: ['baba', 'matador', 'kotudoktor', 'doktor', 'nisanci', 'buyucu', 'gozcu', 'susturucu', 'silahci'] };
+const NINE = ['baba', 'matador', 'kotudoktor', 'doktor', 'nisanci', 'buyucu', 'gozcu', 'susturucu', 'silahci'];
+const TWELVE = [...NINE, 'terorist', 'pehlivan', 'vatandas'];
+const SETUPS = { 9: NINE, 12: TWELVE, 16: [...TWELVE, 'mafya', 'fedai', 'vatandas', 'vatandas'] };
 
 function shuffle(arr, rng = Math.random) {
   const a = [...arr];
@@ -28,7 +35,7 @@ function createGame(players, rng = Math.random) {
   const roles = shuffle(SETUPS[players.length], rng);
   const mafiaCount = roles.filter(r => ROLES[r].team === 'mafia').length;
   return {
-    players: players.map((p, i) => ({ id: p.id, name: p.name, seat: i, role: roles[i], team: ROLES[roles[i]].team, alive: true, silenced: false, hasGun: false })),
+    players: players.map((p, i) => ({ id: p.id, name: p.name, seat: i, role: roles[i], team: ROLES[roles[i]].team, alive: true, silenced: false, hasGun: false, armor: roles[i] === 'pehlivan' ? 2 : roles[i] === 'nisanci' ? 1 : 0 })),
     night: 0,
     shieldUsed: false,
     shotsLeft: mafiaCount - 1,
@@ -38,7 +45,8 @@ function createGame(players, rng = Math.random) {
     reviveUsed: false,
     gunGiven: false,
     gunUsed: false,
-    guessAvailable: true,
+    guessesLeft: players.length >= 16 ? 2 : 1,
+    fedaiUsed: false,
     deadSeen: false,
   };
 }
@@ -53,7 +61,7 @@ function mafiaLeader(g) {
   return roleHolder(g, 'baba') || alive(g).find(p => p.team === 'mafia');
 }
 
-const CITY_ROLES = Object.keys(ROLES).filter(r => ROLES[r].team === 'city');
+const CITY_ROLES = Object.keys(ROLES).filter(r => ROLES[r].team === 'city' && r !== 'vatandas'); // guessable roles
 
 // Night actions this player may take, with allowed targets. Empty on the first night.
 function nightOptions(g, playerId) {
@@ -65,7 +73,7 @@ function nightOptions(g, playerId) {
   const opts = [];
   if (mafiaLeader(g)?.id === me.id) {
     opts.push({ type: 'kill', label: 'Bu gece kim ölsün?', targets: ids(nonMafia) });
-    if (g.guessAvailable) opts.push({ type: 'guess', label: 'Rol tahmini (doğruysa o kişi de çıkar, yanlışsa hak biter)', targets: ids(nonMafia), roles: CITY_ROLES });
+    if (g.guessesLeft > 0) opts.push({ type: 'guess', label: `Rol tahmini: doğruysa o kişi de çıkar (${g.guessesLeft} hak kaldı, her tahmin bir hak harcar)`, targets: ids(nonMafia), roles: CITY_ROLES });
   }
   switch (me.role) {
     case 'matador': opts.push({ type: 'block', label: 'Kimin yeteneğini kapatıyorsun?', targets: ids(nonMafia.filter(p => p.id !== g.matadorLast)) }); break;
@@ -120,7 +128,11 @@ function resolveNight(g, actions) {
   const badSave = a.badSave || null;
 
   const died = new Set();
-  if (a.kill && a.kill !== save) died.add(a.kill);
+  if (a.kill && a.kill !== save) {
+    const t = byId(g, a.kill);
+    if (t.armor > 0) t.armor--; // Pehlivan's lives, Sniper's shield
+    else died.add(t.id);
+  }
 
   const sniper = roleHolder(g, 'nisanci');
   if (a.shot && !actorBlocked('nisanci') && g.shotsLeft > 0) {
@@ -132,9 +144,9 @@ function resolveNight(g, actions) {
     else died.add(t.id);
   }
 
-  if (a.guess?.target && g.guessAvailable) {
+  if (a.guess?.target && g.guessesLeft > 0) {
+    g.guessesLeft--;
     if (byId(g, a.guess.target).role === a.guess.role) died.add(a.guess.target);
-    else g.guessAvailable = false;
   }
 
   let revived = null;
@@ -185,6 +197,24 @@ function useGun(g, shooterId, targetId) {
   return { mafia: t.team === 'mafia', name: t.name };
 }
 
+// Fedai sacrifices himself during the day and takes a target along. Returns the target's name or null.
+function fedaiStrike(g, fedaiId, targetId) {
+  const f = byId(g, fedaiId), t = byId(g, targetId);
+  if (!f?.alive || f.role !== 'fedai' || g.fedaiUsed || !t?.alive || t.id === f.id) return null;
+  g.fedaiUsed = true;
+  f.alive = t.alive = false;
+  g.deadSeen = true;
+  return t.name;
+}
+
+// A Terörist who was just voted out takes one living player with him.
+function terroristRevenge(g, terroristId, targetId) {
+  const tr = byId(g, terroristId), t = byId(g, targetId);
+  if (!tr || tr.alive || tr.role !== 'terorist' || !t?.alive) return null;
+  t.alive = false;
+  return t.name;
+}
+
 // 'city' | 'mafia' | null. Mafia parity only counts as night falls.
 function winner(g, nightFalling) {
   const m = alive(g).filter(p => p.team === 'mafia').length;
@@ -199,4 +229,4 @@ function deadCounts(g) {
   return { city: dead.filter(p => p.team === 'city').length, mafia: dead.filter(p => p.team === 'mafia').length };
 }
 
-module.exports = { ROLES, SETUPS, createGame, nightOptions, validAction, resolveNight, tally, useGun, winner, needed, mafiaLeader, deadCounts, byId, alive, shuffle };
+module.exports = { ROLES, SETUPS, createGame, nightOptions, validAction, resolveNight, tally, useGun, fedaiStrike, terroristRevenge, winner, needed, mafiaLeader, deadCounts, byId, alive, shuffle };
