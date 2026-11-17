@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr" data-phase="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mafya – Sesli Mafya Oyunu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main id="home">
+  <h1 class="logo">MAF<span>Y</span>A</h1>
+  <p class="tagline soft">Arkadaşlarınla sesli mafya oyna. Kayıt yok, indirme yok.</p>
+
+  <section class="panel step">
+    <div class="step-title"><span class="step-num">1</span> Adını yaz</div>
+    <input id="name" maxlength="16" placeholder="Örneğin: Ayşe" autocomplete="nickname">
+  </section>
+
+  <section class="panel step">
+    <div class="step-title"><span class="step-num">2</span> Yeni oda kur…</div>
+    <div class="sizes">
+      <button class="size go" data-size="9"><b>9</b>kişilik oda</button>
+      <button class="size" disabled><b>12</b>kişilik<br><span class="soon">Yakında</span></button>
+      <button class="size" disabled><b>16</b>kişilik<br><span class="soon">Yakında</span></button>
+    </div>
+  </section>
+
+  <section class="panel step">
+    <div class="step-title"><span class="step-num">2</span> …ya da açık bir odaya katıl</div>
+    <div id="roomList" class="room-list"><p class="soft">Şu an açık oda yok. Hemen bir tane kur!</p></div>
+    <div class="row" style="margin-top:12px">
+      <input id="code" maxlength="4" placeholder="Oda kodu (ABCD)" style="text-transform:uppercase">
+      <button class="btn-ghost" id="joinCode">Katıl</button>
+    </div>
+  </section>
+
+  <p class="error" id="homeError" role="alert"></p>
+
+  <section class="panel howto">
+    <details>
+      <summary>Nasıl oynanır? 🤔</summary>
+      <ol>
+        <li>9 kişi masaya oturur. Herkese gizli bir rol verilir: <b style="color:var(--mafia)">3 Mafya</b>, <b style="color:var(--city)">6 Şehir</b>.</li>
+        <li><b>Gündüz:</b> herkes sırayla 50 saniye konuşur. Sonra oylama yapılır, en çok oy alan kişi oyundan çıkar.</li>
+        <li><b>Gece:</b> şehir uyur, mafya birini seçer. Özel rolü olanlar da yeteneğini kullanır.</li>
+        <li><b>Şehir</b> tüm mafyayı bulursa kazanır. <b>Mafya</b> şehir kadar kalırsa kazanır.</li>
+      </ol>
+      <p class="soft">Mikrofonuna izin ver: konuşma sırası gelince herkes seni duyar. Sıran değilken kimse seni duymaz.</p>
+      <div class="role-grid" id="roleGrid"></div>
+    </details>
+  </section>
+</main>
+
+<main id="room" class="hidden">
+  <div class="topbar">
+    <span class="phase" id="phaseLabel"></span>
+    <span class="timer" id="timer"></span>
+    <span class="spacer"></span>
+    <span class="mic soft" id="micStatus"></span>
+    <span class="code-pill">Oda: <span id="roomCode"></span></span>
+    <button class="btn-ghost btn-sm" id="leave">Çık</button>
+  </div>
+  <div class="layout">
+    <div class="table-wrap" id="tableWrap">
+      <div class="table"><div class="narrator"><div class="god">🕯️</div><div class="god-name">Anlatıcı</div><p id="narrator"></p></div></div>
+    </div>
+    <div class="side">
+      <section class="panel role-card hidden" id="roleCard"></section>
+      <section class="panel action" id="action"></section>
+      <section class="panel mafia-panel hidden" id="mafiaPanel">
+        <h3>🩸 Mafya sohbeti</h3>
+        <div class="feed" id="mafiaFeed"></div>
+        <form class="chat-form" id="mafiaForm"><input id="mafiaInput" maxlength="200" placeholder="Sadece mafya görür…"><button class="btn-danger btn-sm">Gönder</button></form>
+      </section>
+      <section class="panel hidden" id="logPanel"><h3>🔒 Sana özel</h3><div class="feed" id="logFeed"></div></section>
+      <section class="panel"><h3>📜 Olaylar</h3><div class="feed" id="historyFeed"></div></section>
+    </div>
+  </div>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="voice.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

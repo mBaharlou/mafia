@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr" data-phase="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mafya – Renk Paleti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+  /* These variables become the game's theme later. */
+  :root {
+    --font-title: "Playfair Display", Georgia, serif;
+    --font-body: "Inter", system-ui, sans-serif;
+
+    --gold: #F2B544;      /* main buttons, "Oyna" */
+    --mafia: #E0313F;     /* mafia team, danger, kill */
+    --city: #3D8BFD;      /* city team */
+    --heal: #2BB673;      /* doctor / save */
+    --muted: #9AA3B2;     /* citizen, disabled */
+  }
+  [data-phase="night"] {
+    --bg: #0E1116; --panel: #1A1F29; --line: #2A3140;
+    --text: #E8E6E3; --text-soft: #A7ADB8;
+  }
+  [data-phase="day"] {
+    --bg: #F6EFE4; --panel: #FFFFFF; --line: #E4D9C8;
+    --text: #1E1A16; --text-soft: #6B625A;
+    --mafia: #B5121B; --city: #1F5FC4; --heal: #15804B; --gold: #D9951A;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 60px;
+    background: var(--bg); color: var(--text);
+    font: 17px/1.55 var(--font-body);
+    transition: background .6s, color .6s;
+  }
+  main { max-width: 960px; margin: 0 auto; }
+  h1, h2 { font-family: var(--font-title); margin: 0 0 8px; }
+  h1 { font-size: clamp(40px, 7vw, 64px); font-weight: 900; letter-spacing: .5px; }
+  h2 { font-size: 26px; margin-top: 40px; }
+  p.soft { color: var(--text-soft); margin: 0 0 16px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 12px; }
+  .swatch {
+    width: 140px; border-radius: 12px; overflow: hidden;
+    background: var(--panel); border: 1px solid var(--line);
+  }
+  .swatch div { height: 70px; }
+  .swatch span { display: block; padding: 8px 10px; font-size: 14px; }
+  .swatch b { display: block; }
+
+  button {
+    font: 700 18px var(--font-body); border: 0; border-radius: 12px;
+    padding: 14px 26px; cursor: pointer;
+  }
+  button:focus-visible { outline: 3px solid var(--city); outline-offset: 3px; }
+  .btn-main { background: var(--gold); color: #1E1A16; }
+  .btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--line); }
+  .btn-danger { background: var(--mafia); color: #fff; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    padding: 16px; width: 210px; border-top: 6px solid var(--team);
+  }
+  .card .icon { font-size: 34px; }
+  .card h3 { font-family: var(--font-title); margin: 6px 0 2px; font-size: 21px; }
+  .card .team { font-size: 13px; font-weight: 700; color: var(--team); text-transform: uppercase; letter-spacing: 1px; }
+  .card p { font-size: 14px; color: var(--text-soft); margin: 8px 0 0; }
+  .mafia { --team: var(--mafia); }
+  .city  { --team: var(--city); }
+
+  .phase-bar {
+    display: flex; align-items: center; gap: 14px; justify-content: space-between;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px;
+  }
+  .phase-bar .label { font-family: var(--font-title); font-size: 24px; }
+  .timer { font: 700 28px var(--font-body); color: var(--gold-text, var(--gold)); }
+  [data-phase="day"] { --gold-text: #8A5600; } /* gold text on cream fails contrast */
+</style>
+</head>
+<body>
+<main>
+  <h1>MAFYA</h1>
+  <p class="soft">Gece mi, gündüz mü? Alttaki düğmeyle iki görünümü karşılaştır.</p>
+
+  <div class="phase-bar">
+    <span class="label" id="phaseLabel">🌙 Gece</span>
+    <span class="timer">0:20</span>
+    <button class="btn-ghost" id="toggle">Gündüze geç</button>
+  </div>
+
+  <h2>Renkler</h2>
+  <div class="row">
+    <div class="swatch"><div style="background:var(--bg);border-bottom:1px solid var(--line)"></div><span><b>Arka plan</b>Sayfa</span></div>
+    <div class="swatch"><div style="background:var(--panel)"></div><span><b>Panel</b>Kartlar</span></div>
+    <div class="swatch"><div style="background:var(--gold)"></div><span><b>Altın</b>Ana düğme</span></div>
+    <div class="swatch"><div style="background:var(--mafia)"></div><span><b>Kırmızı</b>Mafya, tehlike</span></div>
+    <div class="swatch"><div style="background:var(--city)"></div><span><b>Mavi</b>Şehir takımı</span></div>
+    <div class="swatch"><div style="background:var(--heal)"></div><span><b>Yeşil</b>Koruma</span></div>
+    <div class="swatch"><div style="background:var(--muted)"></div><span><b>Gri</b>Pasif, ölü</span></div>
+  </div>
+
+  <h2>Düğmeler</h2>
+  <div class="row">
+    <button class="btn-main">Hemen Oyna</button>
+    <button class="btn-ghost">Oda Kur</button>
+    <button class="btn-danger">Oy Ver</button>
+  </div>
+
+  <h2>Roller</h2>
+  <p class="soft">Renk tek başına bilgi vermez: her kartta simge ve takım yazısı da var (renk körleri için).</p>
+  <div class="row">
+    <div class="card mafia"><div class="icon">🎩</div><span class="team">Mafya</span><h3>Baba</h3><p>Her gece kimin öleceğini seçer. Bir kez kalkanı var.</p></div>
+    <div class="card mafia"><div class="icon">🎭</div><span class="team">Mafya</span><h3>Matador</h3><p>Her gece bir kişinin yeteneğini kapatır.</p></div>
+    <div class="card mafia"><div class="icon">💉</div><span class="team">Mafya</span><h3>Kötü Doktor</h3><p>Her gece bir mafyayı korur.</p></div>
+    <div class="card city"><div class="icon">🩺</div><span class="team">Şehir</span><h3>Doktor</h3><p>Her gece bir kişiyi korur.</p></div>
+    <div class="card city"><div class="icon">🎯</div><span class="team">Şehir</span><h3>Keskin Nişancı</h3><p>Gece bir mafyayı vurabilir. Yanlış vurursa kendisi çıkar.</p></div>
+    <div class="card city"><div class="icon">🔮</div><span class="team">Şehir</span><h3>Büyücü</h3><p>Ölen iyi birini oyuna geri getirir.</p></div>
+    <div class="card city"><div class="icon">👁️</div><span class="team">Şehir</span><h3>Gözcü</h3><p>Her gece birini sorgular.</p></div>
+    <div class="card city"><div class="icon">🤐</div><span class="team">Şehir</span><h3>Susturucu</h3><p>Ertesi gün için birini susturur.</p></div>
+    <div class="card city"><div class="icon">🔫</div><span class="team">Şehir</span><h3>Silahçı</h3><p>Güvendiği birine silah verir.</p></div>
+  </div>
+
+  <h2>Yazı tipi</h2>
+  <p style="font-family:var(--font-title);font-size:30px;margin:0">Şehir uyuyor… Mafya gözlerini açsın.</p>
+  <p>Gövde yazısı: Çağrı, İlknur, Gülşen, Öykü ve Ümit masaya oturdu. Sıra sende, 50 saniyen var.</p>
+</main>
+<script>
+  const root = document.documentElement, btn = document.getElementById("toggle"), label = document.getElementById("phaseLabel");
+  btn.onclick = () => {
+    const day = root.dataset.phase === "night";
+    root.dataset.phase = day ? "day" : "night";
+    label.textContent = day ? "☀️ Gündüz" : "🌙 Gece";
+    btn.textContent = day ? "Geceye geç" : "Gündüze geç";
+  };
+</script>
+</body>
+</html>

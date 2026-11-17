@@ -1,0 +1,114 @@
+/* Palette and fonts from palette.html */
+:root {
+  --font-title: "Playfair Display", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --gold: #F2B544; --mafia: #E0313F; --city: #3D8BFD; --heal: #2BB673; --muted: #9AA3B2;
+}
+[data-phase="night"] { --bg: #0E1116; --panel: #1A1F29; --panel2: #232A37; --line: #2A3140; --text: #E8E6E3; --text-soft: #A7ADB8; --table: #141922; }
+[data-phase="day"] {
+  --bg: #F6EFE4; --panel: #FFFFFF; --panel2: #FBF6EE; --line: #E4D9C8; --text: #1E1A16; --text-soft: #6B625A; --table: #EDE2D1;
+  --mafia: #B5121B; --city: #1F5FC4; --heal: #15804B; --gold: #D9951A; --gold-text: #8A5600;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 17px/1.5 var(--font-body); transition: background .6s, color .6s; min-height: 100vh; }
+h1, h2, h3 { font-family: var(--font-title); margin: 0 0 8px; }
+.hidden { display: none !important; }
+.soft { color: var(--text-soft); }
+button, input, select { font: inherit; }
+button { border: 0; border-radius: 12px; padding: 12px 20px; font-weight: 700; cursor: pointer; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--city); outline-offset: 2px; }
+.btn-main { background: var(--gold); color: #1E1A16; }
+.btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--line); }
+.btn-danger { background: var(--mafia); color: #fff; }
+.btn-ok { background: var(--heal); color: #fff; }
+.btn-sm { padding: 8px 14px; font-size: 15px; border-radius: 10px; }
+input, select { background: var(--panel2); color: var(--text); border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px; width: 100%; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+
+/* ---------- home ---------- */
+#home { max-width: 760px; margin: 0 auto; padding: 40px 20px 60px; }
+.logo { font-size: clamp(52px, 10vw, 84px); font-weight: 900; letter-spacing: 1px; margin: 0; }
+.logo span { color: var(--mafia); }
+.tagline { font-size: 20px; margin: 0 0 28px; }
+.step { margin-bottom: 18px; }
+.step-title { font-weight: 700; margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
+.step-num { background: var(--gold); color: #1E1A16; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; }
+.sizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.size { padding: 18px 10px; border-radius: 14px; background: var(--panel2); color: var(--text); border: 2px solid var(--line); text-align: center; }
+.size b { display: block; font-size: 28px; font-family: var(--font-title); }
+.size.go { background: var(--gold); color: #1E1A16; border-color: var(--gold); }
+.size .soon { display: inline-block; margin-top: 4px; font-size: 12px; background: var(--line); color: var(--text-soft); padding: 2px 8px; border-radius: 99px; }
+.room-list { display: grid; gap: 10px; }
+.room-item { display: flex; align-items: center; justify-content: space-between; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.row { display: flex; gap: 10px; }
+.row input { flex: 1; }
+details summary { cursor: pointer; font-weight: 700; }
+.howto ol { padding-left: 22px; }
+.role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; }
+.role-mini { border-left: 5px solid var(--team); background: var(--panel2); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.role-mini b { display: block; font-size: 16px; }
+.t-mafia { --team: var(--mafia); }
+.t-city { --team: var(--city); }
+.error { color: var(--mafia); font-weight: 700; min-height: 1.5em; }
+
+/* ---------- room ---------- */
+#room { padding: 12px; max-width: 1200px; margin: 0 auto; }
+.topbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.topbar .phase { font-family: var(--font-title); font-size: 22px; font-weight: 700; }
+.timer { font-size: 26px; font-weight: 700; color: var(--gold-text, var(--gold)); min-width: 70px; font-variant-numeric: tabular-nums; }
+.timer.low { color: var(--mafia); }
+.spacer { flex: 1; }
+.code-pill { background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 6px 14px; font-weight: 700; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+.table-wrap { position: relative; width: 100%; max-width: 680px; aspect-ratio: 1; margin: 0 auto; }
+.table { position: absolute; inset: 17%; border-radius: 50%; background: radial-gradient(circle at 50% 40%, var(--panel2), var(--table)); border: 2px solid var(--line); box-shadow: inset 0 0 60px rgba(0,0,0,.35); display: grid; place-items: center; padding: 8%; text-align: center; }
+.narrator .god { font-size: clamp(34px, 6vw, 52px); }
+.narrator .god-name { font-family: var(--font-title); font-weight: 700; color: var(--gold-text, var(--gold)); font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+.narrator p { margin: 6px 0 0; font-size: clamp(14px, 2.2vw, 18px); font-weight: 600; }
+
+.seat { position: absolute; width: 19%; transform: translate(-50%, -50%); text-align: center; transition: opacity .3s; }
+.avatar { position: relative; width: 70%; aspect-ratio: 1; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-title); font-weight: 900; font-size: clamp(18px, 3.4vw, 30px); color: #fff; border: 3px solid var(--line); }
+.seat .nm { margin-top: 4px; font-weight: 700; font-size: clamp(12px, 1.8vw, 15px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seat .tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.seat.me .nm::after { content: " (sen)"; color: var(--text-soft); font-weight: 400; }
+.seat.dead { opacity: .45; }
+.seat.dead .avatar { filter: grayscale(1); }
+.seat.mate .avatar { border-color: var(--mafia); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mafia) 35%, transparent); }
+.seat.speaking .avatar { border-color: var(--gold); animation: pulse 1.4s infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--gold) 70%, transparent); } 50% { box-shadow: 0 0 0 10px transparent; } }
+.badge { position: absolute; top: -6px; right: -6px; background: var(--panel); border: 1px solid var(--line); border-radius: 99px; font-size: 14px; padding: 1px 6px; color: var(--text); font-family: var(--font-body); }
+.badge.votes { background: var(--mafia); color: #fff; border: 0; left: -6px; right: auto; font-weight: 700; }
+.badge.talk { top: auto; bottom: -6px; }
+
+.side { display: grid; gap: 12px; }
+.role-card { border-top: 6px solid var(--team); }
+.role-card .head { display: flex; align-items: center; gap: 12px; }
+.role-card .icon { font-size: 40px; }
+.role-card .team { font-size: 13px; font-weight: 700; color: var(--team); text-transform: uppercase; letter-spacing: 1px; }
+.role-card p { margin: 10px 0 0; font-size: 15px; color: var(--text-soft); }
+.role-card.blur .body { filter: blur(10px); user-select: none; }
+
+.action h3 { font-size: 20px; }
+.action .targets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.action .targets button { background: var(--panel2); color: var(--text); border: 2px solid var(--line); padding: 8px 12px; font-weight: 600; }
+.action .targets button.on { background: var(--gold); color: #1E1A16; border-color: var(--gold); }
+.action .targets button.on.red { background: var(--mafia); color: #fff; border-color: var(--mafia); }
+.action .opt + .opt { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.action .big { font-size: 20px; font-weight: 700; }
+.btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+.feed { max-height: 220px; overflow: auto; font-size: 14px; display: grid; gap: 6px; }
+.feed div { background: var(--panel2); border-radius: 8px; padding: 6px 10px; }
+.chat-form { display: flex; gap: 8px; margin-top: 8px; }
+.chat-form input { padding: 8px 12px; }
+.mafia-panel { border: 2px solid var(--mafia); }
+.mafia-panel h3 { color: var(--mafia); }
+.mic { font-size: 14px; }
+.winner-banner { text-align: center; font-size: 22px; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

@@ -1,0 +1,8 @@
+# One-click setup on Render (render.com ? New ? Blueprint ? pick this repo)
+services:
+  - type: web
+    name: mafya
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
