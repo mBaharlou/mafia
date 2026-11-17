@@ -43,7 +43,7 @@ const SFX = (() => {
     master.gain.setTargetAtTime(settings.on ? 1 : 0, t, .1);
     music.gain.setTargetAtTime(settings.music * duck, t, .4);
     fx.gain.setTargetAtTime(settings.fx, t, .1);
-    rainGain.gain.setTargetAtTime(mode === 'night' ? .07 : .015, t, 1.5);
+    rainGain.gain.setTargetAtTime(mode === 'night' ? .04 : .01, t, 1.5);
     padGain.gain.setTargetAtTime(mode === 'night' ? .22 : .12, t, 1.5);
     padFilter.frequency.setTargetAtTime(mode === 'night' ? 380 : 700, t, 2);
     localStorage.setItem('mafya-sound', JSON.stringify(settings));

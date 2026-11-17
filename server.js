@@ -11,7 +11,9 @@ const DAY_PHASES = ['speech', 'defense', 'vote', 'revote']; // when the Fedai ma
 
 const app = express();
 app.use(express.static(__dirname + '/public'));
-app.get('/roles.json', (req, res) => res.json(G.ROLES));
+// Each role with the room sizes it appears in.
+app.get('/roles.json', (req, res) => res.json(Object.fromEntries(Object.entries(G.ROLES).map(([k, r]) =>
+  [k, { ...r, sizes: SIZES.filter(n => G.SETUPS[n].includes(k)) }]))));
 const server = http.createServer(app);
 const io = new Server(server);
 

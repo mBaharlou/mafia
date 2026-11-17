@@ -64,14 +64,23 @@ $('joinCode').onclick = () => go('join', { code: $('code').value.trim().toUpperC
 $('code').onkeydown = e => { if (e.key === 'Enter') $('joinCode').click(); };
 $('name').onkeydown = e => { if (e.key === 'Enter') $('quickPlay').click(); };
 $('roomList').onclick = e => { const c = e.target.closest('[data-join]')?.dataset.join; if (c) go('join', { code: c }); };
-$('navHow').onclick = () => { $('howModal').classList.remove('hidden'); $('howModal').querySelector('.modal-box').scrollTop = 0; };
-$('navRoles').onclick = () => { $('howModal').classList.remove('hidden'); $('roleGrid').scrollIntoView({ block: 'start' }); };
-$('howClose').onclick = () => $('howModal').classList.add('hidden');
-$('howModal').onclick = e => { if (e.target === $('howModal')) $('howModal').classList.add('hidden'); };
-addEventListener('keydown', e => { if (e.key === 'Escape') $('howModal').classList.add('hidden'); });
+// "How to play" and "Roles" open from the menu bar and from the in-game HUD.
+const closeModals = () => document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
+  closeModals();
+  const m = $(b.dataset.open);
+  m.classList.remove('hidden');
+  m.querySelector('.modal-box').scrollTop = 0;
+});
+document.querySelectorAll('.modal').forEach(m => m.onclick = e => { if (e.target === m || e.target.closest('[data-close]')) closeModals(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
 
 fetch('/roles.json').then(r => r.json()).then(roles => {
-  $('roleGrid').innerHTML = Object.values(roles).map(r => `<div class="role-mini t-${r.team}"><span class="ic">${r.icon}</span><div><b>${esc(r.name)}</b>${esc(r.desc)}</div></div>`).join('');
+  const card = r => `<div class="role-mini t-${r.team}"><span class="ic">${r.icon}</span><div><b>${esc(r.name)}</b>${esc(r.desc)}
+    <div class="sizes">${[9, 12, 16].map(n => `<span class="${r.sizes.includes(n) ? 'on' : ''}">${n}</span>`).join('')}</div></div></div>`;
+  const all = Object.values(roles);
+  $('roleGridMafia').innerHTML = all.filter(r => r.team === 'mafia').map(card).join('');
+  $('roleGridCity').innerHTML = all.filter(r => r.team === 'city').map(card).join('');
 });
 
 socket.on('rooms', ({ rooms, online }) => {
