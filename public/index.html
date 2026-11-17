@@ -3,86 +3,140 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mafya – Sesli Mafya Oyunu</title>
+<title>MAFYA · Şehir Uyurken</title>
+<meta name="theme-color" content="#07090D">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="bg" aria-hidden="true">
+  <div class="sky"></div>
+  <div class="moon"></div>
+  <div id="skyline"></div>
+</div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
 
-<main id="home">
-  <h1 class="logo">MAF<span>Y</span>A</h1>
-  <p class="tagline soft">Arkadaşlarınla sesli mafya oyna. Kayıt yok, indirme yok.</p>
-
-  <section class="panel step">
-    <div class="step-title"><span class="step-num">1</span> Adını yaz</div>
-    <input id="name" maxlength="16" placeholder="Örneğin: Ayşe" autocomplete="nickname">
-  </section>
-
-  <section class="panel step">
-    <div class="step-title"><span class="step-num">2</span> Yeni oda kur…</div>
-    <div class="sizes">
-      <button class="size go" data-size="9"><b>9</b>kişilik oda</button>
-      <button class="size" disabled><b>12</b>kişilik<br><span class="soon">Yakında</span></button>
-      <button class="size" disabled><b>16</b>kişilik<br><span class="soon">Yakında</span></button>
+<!-- ============ MAIN MENU ============ -->
+<main id="home" class="screen">
+  <div class="home-left">
+    <div class="logo-wrap">
+      <div class="logo-kicker">SESLİ · ONLİNE · ÜCRETSİZ</div>
+      <h1 class="logo">MAF<span>Y</span>A</h1>
+      <div class="logo-sub">Şehir uyurken kimseye güvenme.</div>
     </div>
-  </section>
 
-  <section class="panel step">
-    <div class="step-title"><span class="step-num">2</span> …ya da açık bir odaya katıl</div>
-    <div id="roomList" class="room-list"><p class="soft">Şu an açık oda yok. Hemen bir tane kur!</p></div>
-    <div class="row" style="margin-top:12px">
-      <input id="code" maxlength="4" placeholder="Oda kodu (ABCD)" style="text-transform:uppercase">
-      <button class="btn-ghost" id="joinCode">Katıl</button>
-    </div>
-  </section>
+    <section class="glass card">
+      <label class="lbl" for="name">Takma adın</label>
+      <input id="name" maxlength="16" placeholder="Örneğin: Ayşe" autocomplete="nickname">
+      <button id="quickPlay" class="btn-play"><span>▶</span> HEMEN OYNA</button>
+      <p class="hint">Boş bir masaya otomatik oturursun. Masa dolunca oyun başlar.</p>
+    </section>
 
-  <p class="error" id="homeError" role="alert"></p>
+    <section class="glass card">
+      <div class="card-head">Yeni masa kur</div>
+      <div class="modes">
+        <button class="mode go" data-size="9"><b>9</b><span>OYUNCU</span><em>3 mafya · 6 şehir</em></button>
+        <button class="mode" disabled><b>12</b><span>OYUNCU</span><i class="ribbon">YAKINDA</i></button>
+        <button class="mode" disabled><b>16</b><span>OYUNCU</span><i class="ribbon">YAKINDA</i></button>
+      </div>
+    </section>
 
-  <section class="panel howto">
-    <details>
-      <summary>Nasıl oynanır? 🤔</summary>
-      <ol>
-        <li>9 kişi masaya oturur. Herkese gizli bir rol verilir: <b style="color:var(--mafia)">3 Mafya</b>, <b style="color:var(--city)">6 Şehir</b>.</li>
-        <li><b>Gündüz:</b> herkes sırayla 50 saniye konuşur. Sonra oylama yapılır, en çok oy alan kişi oyundan çıkar.</li>
-        <li><b>Gece:</b> şehir uyur, mafya birini seçer. Özel rolü olanlar da yeteneğini kullanır.</li>
-        <li><b>Şehir</b> tüm mafyayı bulursa kazanır. <b>Mafya</b> şehir kadar kalırsa kazanır.</li>
-      </ol>
-      <p class="soft">Mikrofonuna izin ver: konuşma sırası gelince herkes seni duyar. Sıran değilken kimse seni duymaz.</p>
-      <div class="role-grid" id="roleGrid"></div>
-    </details>
-  </section>
+    <section class="glass card">
+      <div class="card-head">Açık masalar <span class="online" id="online"></span></div>
+      <div id="roomList" class="room-list"></div>
+      <div class="row">
+        <input id="code" maxlength="4" placeholder="MASA KODU" class="code-input">
+        <button class="btn-ghost" id="joinCode">KATIL</button>
+      </div>
+    </section>
+
+    <p class="error" id="homeError" role="alert"></p>
+    <button class="btn-link" id="howBtn">📖 Nasıl oynanır? Roller neler?</button>
+  </div>
+
+  <div class="home-right" aria-hidden="true">
+    <div class="hero-spot"></div>
+    <div class="hero-narrator" id="heroNarrator"></div>
+    <div class="hero-quote">“Masaya hoş geldin. Kimin kim olduğunu<br>sadece <b>ben</b> bilirim…”</div>
+  </div>
 </main>
 
-<main id="room" class="hidden">
-  <div class="topbar">
-    <span class="phase" id="phaseLabel"></span>
-    <span class="timer" id="timer"></span>
-    <span class="spacer"></span>
-    <span class="mic soft" id="micStatus"></span>
-    <span class="code-pill">Oda: <span id="roomCode"></span></span>
-    <button class="btn-ghost btn-sm" id="leave">Çık</button>
-  </div>
-  <div class="layout">
-    <div class="table-wrap" id="tableWrap">
-      <div class="table"><div class="narrator"><div class="god">🕯️</div><div class="god-name">Anlatıcı</div><p id="narrator"></p></div></div>
+<!-- ============ HOW TO PLAY ============ -->
+<div id="howModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+  <div class="modal-box glass">
+    <button class="modal-x" id="howClose" aria-label="Kapat">✕</button>
+    <h2 id="howTitle">Nasıl oynanır?</h2>
+    <div class="steps">
+      <div><b>1</b><p>9 kişi masaya oturur. Herkese gizli bir rol verilir: <em class="c-mafia">3 Mafya</em>, <em class="c-city">6 Şehir</em>.</p></div>
+      <div><b>2</b><p><strong>Gündüz</strong> herkes sırayla 50 saniye konuşur, sonra oylama yapılır.</p></div>
+      <div><b>3</b><p><strong>Gece</strong> şehir uyur. Mafya kurbanını seçer, özel roller yeteneğini kullanır.</p></div>
+      <div><b>4</b><p><strong>Şehir</strong> tüm mafyayı bulursa, <strong>mafya</strong> şehir kadar kalırsa kazanır.</p></div>
     </div>
-    <div class="side">
-      <section class="panel role-card hidden" id="roleCard"></section>
-      <section class="panel action" id="action"></section>
-      <section class="panel mafia-panel hidden" id="mafiaPanel">
-        <h3>🩸 Mafya sohbeti</h3>
+    <p class="soft">🎤 Mikrofonuna izin ver. Sıran gelince herkes seni duyar; sıran değilken kimse duymaz.</p>
+    <div class="role-grid" id="roleGrid"></div>
+  </div>
+</div>
+
+<!-- ============ GAME ROOM ============ -->
+<main id="room" class="screen hidden">
+  <header class="hud">
+    <div class="hud-left">
+      <span class="chip">MASA <b id="roomCode"></b></span>
+      <span class="chip mic" id="micStatus"></span>
+    </div>
+    <div class="hud-center">
+      <div class="phase-title" id="phaseLabel"></div>
+      <div class="phase-sub" id="phaseSub"></div>
+    </div>
+    <div class="hud-right">
+      <div class="ring" id="ring">
+        <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" class="ring-bg"/><circle cx="32" cy="32" r="27" class="ring-fg" id="ringFg"/></svg>
+        <span id="timer"></span>
+      </div>
+      <button class="btn-ghost btn-sm" id="leave">ÇIK</button>
+    </div>
+  </header>
+
+  <div class="room-body">
+    <section class="stage" id="stage">
+      <div class="stage-light"></div>
+      <div class="stage-narrator" id="stageNarrator"></div>
+      <div class="table"><div class="felt"><p class="subtitle" id="narrator"></p></div></div>
+    </section>
+
+    <aside class="side">
+      <section class="glass role-card hidden" id="roleCard"></section>
+      <section class="glass action" id="action"></section>
+      <section class="glass mafia-panel hidden" id="mafiaPanel">
+        <h3>🩸 Mafya kanalı</h3>
         <div class="feed" id="mafiaFeed"></div>
-        <form class="chat-form" id="mafiaForm"><input id="mafiaInput" maxlength="200" placeholder="Sadece mafya görür…"><button class="btn-danger btn-sm">Gönder</button></form>
+        <form class="chat-form" id="mafiaForm"><input id="mafiaInput" maxlength="200" placeholder="Sadece mafya görür…"><button class="btn-danger btn-sm">GÖNDER</button></form>
       </section>
-      <section class="panel hidden" id="logPanel"><h3>🔒 Sana özel</h3><div class="feed" id="logFeed"></div></section>
-      <section class="panel"><h3>📜 Olaylar</h3><div class="feed" id="historyFeed"></div></section>
-    </div>
+      <section class="glass hidden" id="logPanel"><h3>🔒 Sana özel</h3><div class="feed" id="logFeed"></div></section>
+      <section class="glass"><h3>📜 Olaylar</h3><div class="feed" id="historyFeed"></div></section>
+    </aside>
   </div>
 </main>
+
+<!-- cinematic phase title -->
+<div id="cine" class="cine" aria-live="polite"><div class="bar"></div><div class="cine-text"><div class="cine-title" id="cineTitle"></div><div class="cine-sub" id="cineSub"></div></div><div class="bar"></div></div>
+
+<!-- role reveal -->
+<div id="reveal" class="reveal hidden">
+  <div class="reveal-label">ROLÜN</div>
+  <div class="flip" id="flip">
+    <div class="face back"><span>?</span></div>
+    <div class="face front" id="revealFront"></div>
+  </div>
+  <button class="btn-play" id="revealOk">ANLADIM</button>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="art.js"></script>
+<script src="fx.js"></script>
 <script src="voice.js"></script>
 <script src="app.js"></script>
 </body>

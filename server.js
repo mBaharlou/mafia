@@ -51,6 +51,7 @@ class Room {
     clearTimeout(this.timer);
     this.phase = phase;
     this.deadline = secs ? Date.now() + secs * 1000 * SCALE : null;
+    this.duration = secs * 1000 * SCALE;
     if (narrator) { this.narrator = narrator; this.history.push(narrator); }
     if (secs) this.timer = setTimeout(() => { next(); }, secs * 1000 * SCALE);
     this.broadcast();
@@ -287,6 +288,7 @@ class Room {
     const v = {
       code: this.code, size: this.size, phase: this.phase, myId: p.id,
       left: this.deadline ? Math.max(0, this.deadline - Date.now()) : null,
+      total: this.duration,
       narrator: this.narrator, history: this.history.slice(-30), logs: this.logs[p.id] || [],
       players: (g ? g.players : this.players).map((x, i) => {
         const conn = this.players.find(y => y.id === x.id);
@@ -334,7 +336,10 @@ class Room {
 }
 
 function roomList() {
-  return [...rooms.values()].filter(r => r.phase === 'lobby').map(r => ({ code: r.code, size: r.size, count: r.players.length }));
+  return {
+    online: io.engine.clientsCount,
+    rooms: [...rooms.values()].filter(r => r.phase === 'lobby').map(r => ({ code: r.code, size: r.size, count: r.players.length })),
+  };
 }
 let roomsTimer = null;
 function sendRooms() { // batched: many state changes per second shouldn't spam everyone
@@ -352,7 +357,7 @@ io.on('connection', socket => {
     r.broadcast();
   };
 
-  socket.emit('rooms', roomList());
+  sendRooms();
 
   socket.on('create', ({ name, size } = {}) => {
     name = cleanName(name);
@@ -399,6 +404,7 @@ io.on('connection', socket => {
   }
 
   socket.on('disconnect', () => {
+    sendRooms(); // online count changed
     if (!room || player.socketId !== socket.id) return;
     if (room.phase === 'lobby' || room.phase === 'starting') room.leaveLobby(player);
     else { player.connected = false; player.socketId = null; room.broadcast(); }

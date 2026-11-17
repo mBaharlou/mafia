@@ -3,17 +3,22 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SAVE_KEY = 'mafya-session';
 
-let state = null, receivedAt = 0, guessRole = null, shooting = false;
+let state = null, prevPhase = null, receivedAt = 0, guessRole = null, shooting = false, roleHidden = false, openRooms = [];
 const voice = new Voice(socket);
 
-// ---------- home ----------
+// ---------- art ----------
+$('skyline').innerHTML = ART.skyline();
+$('heroNarrator').innerHTML = ART.narratorCopy('H');
+$('stageNarrator').innerHTML = ART.narratorCopy('S');
+
+// ---------- main menu ----------
 $('name').value = localStorage.getItem('mafya-name') || '';
 const params = new URLSearchParams(location.search);
 if (params.get('oda')) $('code').value = params.get('oda').toUpperCase();
 
 function myName() {
   const n = $('name').value.trim();
-  if (!n) { $('homeError').textContent = 'Önce adını yaz 🙂'; $('name').focus(); return null; }
+  if (!n) { $('homeError').textContent = 'Önce takma adını yaz 🙂'; $('name').focus(); return null; }
   localStorage.setItem('mafya-name', n);
   $('homeError').textContent = '';
   return n;
@@ -24,195 +29,216 @@ async function go(event, data) {
   await voice.startMic(); // asks for mic permission inside the click
   socket.emit(event, { ...data, name });
 }
-document.querySelectorAll('.size.go').forEach(b => b.onclick = () => go('create', { size: Number(b.dataset.size) }));
+$('quickPlay').onclick = () => {
+  const best = [...openRooms].filter(r => r.count < r.size).sort((a, b) => b.count - a.count)[0];
+  best ? go('join', { code: best.code }) : go('create', { size: 9 });
+};
+document.querySelectorAll('.mode.go').forEach(b => b.onclick = () => go('create', { size: Number(b.dataset.size) }));
 $('joinCode').onclick = () => go('join', { code: $('code').value.trim().toUpperCase() });
-$('roomList').onclick = e => { const c = e.target.dataset.join; if (c) go('join', { code: c }); };
+$('code').onkeydown = e => { if (e.key === 'Enter') $('joinCode').click(); };
+$('name').onkeydown = e => { if (e.key === 'Enter') $('quickPlay').click(); };
+$('roomList').onclick = e => { const c = e.target.closest('[data-join]')?.dataset.join; if (c) go('join', { code: c }); };
+$('howBtn').onclick = () => $('howModal').classList.remove('hidden');
+$('howClose').onclick = () => $('howModal').classList.add('hidden');
+$('howModal').onclick = e => { if (e.target === $('howModal')) $('howModal').classList.add('hidden'); };
+addEventListener('keydown', e => { if (e.key === 'Escape') $('howModal').classList.add('hidden'); });
 
-socket.on('rooms', list => {
-  $('roomList').innerHTML = list.length
-    ? list.map(r => `<div class="room-item"><span><b>Oda ${esc(r.code)}</b> <span class="soft">· ${r.count}/${r.size} kişi</span></span><button class="btn-main btn-sm" data-join="${esc(r.code)}">Katıl</button></div>`).join('')
-    : '<p class="soft">Şu an açık oda yok. Hemen bir tane kur!</p>';
+fetch('/roles.json').then(r => r.json()).then(roles => {
+  $('roleGrid').innerHTML = Object.values(roles).map(r => `<div class="role-mini t-${r.team}"><span class="ic">${r.icon}</span><div><b>${esc(r.name)}</b>${esc(r.desc)}</div></div>`).join('');
+});
+
+socket.on('rooms', ({ rooms, online }) => {
+  openRooms = rooms;
+  $('online').textContent = `${online} çevrimiçi`;
+  $('roomList').innerHTML = rooms.length
+    ? rooms.map(r => `<div class="room-item"><span class="rc">${esc(r.code)}</span>
+        <span class="seats-bar" title="${r.count}/${r.size}">${Array.from({ length: r.size }, (_, i) => `<i class="${i < r.count ? 'on' : ''}"></i>`).join('')}</span>
+        <button class="btn-gold btn-sm" data-join="${esc(r.code)}">KATIL</button></div>`).join('')
+    : '<div class="empty">Şu an açık masa yok. “Hemen Oyna” ile ilk masayı sen kur!</div>';
 });
 socket.on('err', msg => { $('homeError').textContent = msg; });
 socket.on('joined', ({ code, token }) => {
   localStorage.setItem(SAVE_KEY, JSON.stringify({ code, token }));
-  voice.startMic(); // no-op if already on; needed after a page reload
   history.replaceState(null, '', '?oda=' + code);
+  voice.startMic(); // no-op if already on; needed after a page reload
 });
 socket.on('connect', () => {
   const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
   if (saved) socket.emit('resume', saved);
 });
 socket.on('resumeFailed', () => { localStorage.removeItem(SAVE_KEY); showHome(); });
-socket.on('state', s => { state = s; receivedAt = Date.now(); render(); });
+socket.on('state', s => { state = s; receivedAt = Date.now(); render(); prevPhase = s.phase; });
 
 $('leave').onclick = () => {
   if (state?.phase !== 'lobby' && state?.phase !== 'over' && !confirm('Oyundan çıkmak istediğine emin misin?')) return;
   socket.emit('leave');
   localStorage.removeItem(SAVE_KEY);
   history.replaceState(null, '', location.pathname);
-  state = null;
+  state = prevPhase = null;
   voice.closeAll();
   showHome();
 };
-function showHome() { $('home').classList.remove('hidden'); $('room').classList.add('hidden'); document.documentElement.dataset.phase = 'night'; }
-
-// role list in "Nasıl oynanır?"
-fetch('/roles.json').then(r => r.json()).then(fetchRoles);
-function fetchRoles(roles) {
-  if (!roles || $('roleGrid').children.length) return;
-  $('roleGrid').innerHTML = Object.values(roles).map(r => `<div class="role-mini t-${r.team}"><b>${r.icon} ${esc(r.name)}</b>${esc(r.desc)}</div>`).join('');
+function showHome() {
+  $('home').classList.remove('hidden'); $('room').classList.add('hidden');
+  document.documentElement.dataset.phase = 'night'; FX.mode('night');
 }
 
-// ---------- room ----------
+// ---------- game room ----------
 const PHASES = {
-  lobby: '🪑 Bekleme odası', starting: '⏳ Başlıyor', roles: '🎭 Roller', speech: '☀️ Gündüz', defense: '🛡️ Savunma',
-  vote: '🗳️ Oylama', revote: '🗳️ Son oylama', poll: '❓ Soru', morning: '🌅 Sabah', announce: '📢 Duyuru',
-  coin: '🪙 Yazı tura', night: '🌙 Gece', over: '🏁 Oyun bitti',
+  lobby: ['Bekleme salonu', 'Masa doluyor'], starting: ['Hazırlan', 'Oyun başlıyor'], roles: ['Roller', 'Rolüne bak, kimseye söyleme'],
+  speech: ['Gündüz', 'Konuşma turu'], defense: ['Savunma', 'Son sözler'], vote: ['Oylama', 'Kim çıksın?'], revote: ['Son oylama', 'Karar anı'],
+  poll: ['Soru', 'Dışarıdakiler'], morning: ['Sabah', 'Şehir uyanıyor'], announce: ['Duyuru', ''], coin: ['Yazı tura', 'Şans karar verecek'],
+  night: ['Gece', 'Şehir uyuyor'], over: ['Oyun bitti', ''],
 };
 const DARK = ['lobby', 'starting', 'roles', 'night', 'over'];
-const COLORS = ['#7B5EA7', '#C2185B', '#00897B', '#5D7FDB', '#E67E22', '#6D8B3A', '#AD5A4A', '#3F8FA6', '#8E6C3A', '#B0478F', '#4A6B8A', '#9C6B30'];
-const colorOf = id => COLORS[[...id].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
 const nameOf = id => state.players.find(p => p.id === id)?.name || '?';
 
 function render() {
   const s = state;
   $('home').classList.add('hidden');
   $('room').classList.remove('hidden');
-  document.documentElement.dataset.phase = DARK.includes(s.phase) ? 'night' : 'day';
-  fetchRoles(s.roles);
+  const mode = DARK.includes(s.phase) ? 'night' : 'day';
+  document.documentElement.dataset.phase = mode;
+  FX.mode(mode);
   $('roomCode').textContent = s.code;
-  $('phaseLabel').textContent = s.phase === 'night' ? `🌙 Gece ${s.night}` : s.phase === 'speech' ? `☀️ Gün ${s.day}` : PHASES[s.phase];
-  $('narrator').textContent = s.narrator || (s.phase === 'lobby' ? `Oyuncular bekleniyor… (${s.players.length}/${s.size})` : '');
+  const [title, sub] = PHASES[s.phase];
+  $('phaseLabel').textContent = s.phase === 'night' ? `Gece ${s.night}` : s.phase === 'speech' ? `Gün ${s.day}` : title;
+  $('phaseSub').textContent = s.phase === 'speech' && s.day === 1 ? 'Tanışma turu' : s.phase === 'lobby' ? `${s.players.length}/${s.size} oyuncu` : sub;
+  const text = s.narrator || (s.phase === 'lobby' ? `Oyuncular bekleniyor… (${s.players.length}/${s.size})` : '');
+  const sub$ = $('narrator');
+  if (sub$.textContent !== text) { sub$.textContent = text; sub$.classList.remove('pop'); void sub$.offsetWidth; sub$.classList.add('pop'); }
+  $('stage').classList.toggle('talking', ['morning', 'announce', 'coin', 'roles', 'starting', 'over'].includes(s.phase));
   renderSeats(s);
   renderRole(s);
   renderAction(s);
   renderFeeds(s);
+  cinematic(s);
   voice.update(s);
   tick();
 }
 
 function renderSeats(s) {
-  const wrap = $('tableWrap');
-  wrap.querySelectorAll('.seat').forEach(e => e.remove());
-  const n = Math.max(s.players.length, s.size);
+  const stage = $('stage');
+  stage.querySelectorAll('.seat').forEach(e => e.remove());
+  const n = s.size;
   s.players.forEach(p => {
-    const angle = (-90 + p.seat * 360 / n) * Math.PI / 180;
+    // seats run clockwise around the table, leaving the top free for the narrator
+    const deg = -50 + p.seat * 280 / (n - 1);
+    const a = deg * Math.PI / 180;
     const el = document.createElement('div');
     const speaking = s.speaker?.id === p.id;
     el.className = 'seat' + (p.id === s.myId ? ' me' : '') + (!p.alive ? ' dead' : '') + (p.mate ? ' mate' : '') + (speaking ? ' speaking' : '');
-    el.style.left = 50 + 41 * Math.cos(angle) + '%';
-    el.style.top = 50 + 41 * Math.sin(angle) + '%';
+    el.style.left = 50 + 42 * Math.cos(a) + '%';
+    el.style.top = 58 + 34 * Math.sin(a) + '%';
     const role = p.role && s.roles[p.role];
     const votes = s.vote?.counts[p.id];
+    const showRole = role && (s.phase === 'over' || p.id !== s.myId);
     el.innerHTML = `
-      <div class="avatar" style="background:${colorOf(p.id)}">${esc(p.name[0].toUpperCase())}
-        ${!p.alive ? '<span class="badge">💀</span>' : p.silenced ? '<span class="badge">🤐</span>' : !p.connected ? '<span class="badge">📵</span>' : ''}
+      <div class="portrait"><div class="pic">${ART.portrait(p.id)}</div>
+        ${p.alive && p.silenced ? '<span class="badge">🤐</span>' : p.alive && !p.connected ? '<span class="badge" title="Bağlantı koptu">📵</span>' : ''}
         ${votes ? `<span class="badge votes">${votes}</span>` : ''}
-        ${speaking ? '<span class="badge talk">🎤</span>' : ''}
+        ${speaking ? '<span class="eq"><i></i><i></i><i></i><i></i></span>' : ''}
       </div>
-      <div class="nm">${esc(p.name)}</div>
-      ${role && (s.phase === 'over' || p.id !== s.myId) ? `<div class="tag" style="color:var(--${role.team === 'mafia' ? 'mafia' : 'city'})">${role.icon} ${esc(role.name)}</div>`
-        : p.mate && p.id !== s.myId ? '<div class="tag" style="color:var(--mafia)">Mafya</div>' : ''}`;
-    wrap.appendChild(el);
+      <div class="plate">${esc(p.name)}</div>
+      ${showRole ? `<div class="tag" style="color:var(--${role.team === 'mafia' ? 'mafia' : 'city'})">${role.icon} ${esc(role.name)}</div>`
+        : p.mate && p.id !== s.myId ? '<div class="tag" style="color:var(--mafia)">🩸 Mafya</div>' : ''}`;
+    stage.appendChild(el);
   });
 }
 
-let roleHidden = false;
 function renderRole(s) {
   const card = $('roleCard');
   if (!s.me) return card.classList.add('hidden');
   const r = s.roles[s.me.role];
-  card.className = `panel role-card t-${r.team}` + (roleHidden ? ' blur' : '');
+  card.className = `glass role-card t-${r.team}` + (roleHidden ? ' blur' : '');
   card.innerHTML = `
     <div class="body"><div class="head"><span class="icon">${r.icon}</span><div>
-      <div class="team">${r.team === 'mafia' ? 'Mafya' : 'Şehir'}</div><h3>${esc(r.name)}</h3></div></div>
-      <p>${esc(r.desc)}</p>${s.me.hasGun ? '<p><b>🔫 Elinde bir silah var!</b></p>' : ''}</div>
-    <div class="btns"><button class="btn-ghost btn-sm" id="toggleRole">${roleHidden ? '👁️ Rolümü göster' : '🙈 Rolümü gizle'}</button></div>`;
+      <div class="team">${r.team === 'mafia' ? 'MAFYA' : 'ŞEHİR'}</div><div class="rname">${esc(r.name)}</div></div></div>
+      <p>${esc(r.desc)}</p>${s.me.hasGun ? '<p><b>🔫 Elinde bir silah var!</b> Konuşma sıran gelince kullanabilirsin.</p>' : ''}</div>
+    <button class="btn-link" id="toggleRole">${roleHidden ? '👁️ Rolümü göster' : '🙈 Rolümü gizle'}</button>`;
   $('toggleRole').onclick = () => { roleHidden = !roleHidden; renderRole(state); };
 }
 
-function targetButtons(ids, chosen, cb, red) {
-  return `<div class="targets">${ids.map(id => `<button class="${chosen?.includes?.(id) || chosen === id ? 'on' + (red ? ' red' : '') : ''}" data-t="${esc(id)}">${esc(nameOf(id))}</button>`).join('')}</div>`;
+function targetButtons(ids, chosen, red) {
+  return `<div class="targets">${ids.map(id => `<button class="${(Array.isArray(chosen) ? chosen.includes(id) : chosen === id) ? 'on' + (red ? ' red' : '') : ''}" data-t="${esc(id)}">${esc(nameOf(id))}</button>`).join('')}</div>`;
 }
 
 function renderAction(s) {
-  const el = $('action');
   const me = s.me, alive = me?.alive;
   let html = '';
-  const deadNote = me && !alive && s.phase !== 'over' ? '<p class="soft">💀 Oyundan çıktın. İzlemeye devam edebilirsin; konuşamaz ve oy veremezsin.</p>' : '';
+  const deadNote = me && !alive && s.phase !== 'over' ? '<div class="dead-note">💀 Oyundan çıktın. İzlemeye devam edebilirsin; konuşamaz ve oy veremezsin.</div>' : '';
 
   switch (s.phase) {
     case 'lobby': {
       const link = `${location.origin}/?oda=${s.code}`;
-      html = `<h3>Masa doluyor: ${s.players.length}/${s.size}</h3>
+      html = `<p class="big">Masa doluyor: ${s.players.length}/${s.size}</p>
         <p class="soft">${s.size} kişi olunca oyun kendiliğinden başlar. Arkadaşlarını çağır:</p>
-        <div class="row"><input readonly value="${esc(link)}"><button class="btn-main btn-sm" id="copy">Kopyala</button></div>
-        <p class="soft">Bekleme odasında herkes birbirini duyar 🎤</p>`;
+        <div class="row"><input readonly value="${esc(link)}"><button class="btn-gold btn-sm" id="copy">KOPYALA</button></div>
+        <p class="soft" style="margin-top:10px">🎤 Bekleme salonunda herkes birbirini duyar.</p>`;
       break;
     }
-    case 'starting': html = '<h3>Masa doldu! 🎉</h3><p class="soft">Oyun birazdan başlıyor. Rolünü kimseye gösterme.</p>'; break;
-    case 'roles': html = '<h3>Rolüne bak 👆</h3><p class="soft">Yukarıdaki kartta rolün ve ne yapacağın yazıyor. Kimseye söyleme!</p>'; break;
+    case 'starting': html = '<p class="big">Masa doldu! 🎉</p><p class="soft">Birazdan rolün açıklanacak. Kimseye gösterme.</p>'; break;
+    case 'roles': html = '<p class="big">Rolüne bak 🤫</p><p class="soft">Rol kartın burada her zaman duruyor. İstersen gizleyebilirsin.</p>'; break;
     case 'speech': case 'defense': {
       const sp = s.speaker;
       if (sp.id === s.myId) {
-        html = `<p class="big">🎤 Sıra sende! Konuş, herkes seni duyuyor.</p>`;
-        if (s.challenge?.status === 'pending') html += `<div class="panel" style="margin-top:10px"><b>${esc(nameOf(s.challenge.from))}</b> senden sonra 30 saniye ek konuşma istiyor.<div class="btns"><button class="btn-ok btn-sm" id="chYes">Kabul et</button><button class="btn-ghost btn-sm" id="chNo">Reddet</button></div></div>`;
+        html = `<p class="big">🎤 Sıra sende!</p><p class="soft">Konuş, herkes seni duyuyor.</p>`;
+        if (s.challenge?.status === 'pending') html += `<div class="callout"><b>${esc(nameOf(s.challenge.from))}</b> senden sonra 30 saniye ek konuşma istiyor.<div class="btns"><button class="btn-ok btn-sm" id="chYes">KABUL ET</button><button class="btn-ghost btn-sm" id="chNo">REDDET</button></div></div>`;
         if (s.canShoot) html += shooting
-          ? `<div class="opt"><b>🔫 Kimi vuruyorsun?</b> <span class="soft">Mafyaysa çıkar; iyiyse kimse çıkmaz. İki durumda da hemen gece olur.</span>${targetButtons(s.players.filter(p => p.alive && p.id !== s.myId).map(p => p.id), null)}<div class="btns"><button class="btn-ghost btn-sm" id="noShoot">Vazgeç</button></div></div>`
-          : '<div class="btns"><button class="btn-danger" id="shoot">🔫 Silahı kullan</button></div>';
-        html += '<div class="btns"><button class="btn-main" id="endSpeech">Konuşmamı bitir ✔</button></div>';
+          ? `<div class="callout"><b>🔫 Kimi vuruyorsun?</b><p class="soft">Mafyaysa çıkar; iyiyse kimse çıkmaz. İki durumda da hemen gece olur.</p>${targetButtons(s.players.filter(p => p.alive && p.id !== s.myId).map(p => p.id), null, true)}<div class="btns"><button class="btn-ghost btn-sm" id="noShoot">VAZGEÇ</button></div></div>`
+          : '<div class="btns"><button class="btn-danger" id="shoot">🔫 SİLAHI KULLAN</button></div>';
+        html += '<div class="btns"><button class="btn-gold" id="endSpeech">KONUŞMAMI BİTİR ✔</button></div>';
       } else {
-        html = `<p class="big">${esc(nameOf(sp.id))} ${sp.kind === 'defense' ? 'kendini savunuyor' : 'konuşuyor'} 🎤</p><p class="soft">Dinle. Sıran gelince sen de konuşacaksın.</p>`;
+        html = `<p class="big">${esc(nameOf(sp.id))} ${sp.kind === 'defense' ? 'kendini savunuyor' : sp.kind === 'challenge' ? 'ek süre kullanıyor' : 'konuşuyor'} 🎤</p><p class="soft">Dinle. Sıran gelince sen de konuşacaksın.</p>`;
         if (s.challenge) html += `<p class="soft">${esc(nameOf(s.challenge.from))} 30 sn ek süre istedi: ${{ pending: 'cevap bekleniyor…', accepted: 'kabul edildi ✔', declined: 'reddedildi ✖' }[s.challenge.status]}</p>`;
-        if (s.canChallenge) html += `<div class="btns"><button class="btn-ghost" id="challenge">⏱ 30 sn ek süre iste</button></div><p class="soft">${esc(nameOf(sp.id))} kabul ederse, onun konuşması bitince 30 saniye daha konuşursun. Günde bir kez.</p>`;
+        if (s.canChallenge) html += `<div class="btns"><button class="btn-ghost" id="challenge">⏱ 30 SN EK SÜRE İSTE</button></div><p class="soft" style="margin-top:8px">${esc(nameOf(sp.id))} kabul ederse, onun konuşması bitince 30 saniye daha konuşursun. Günde bir kez.</p>`;
       }
       break;
     }
     case 'vote': case 'revote': {
       const v = s.vote;
-      html = `<h3>🗳️ ${s.phase === 'revote' ? 'Son oylama' : 'Oylama'}</h3><p class="soft">Çıkmasını istediğin kişilere dokun (birden fazla seçebilirsin). Gereken oy: <b>${v.need}</b></p>`;
-      if (alive) html += targetButtons(v.candidates.filter(id => id !== s.myId), v.mine, null, true);
-      html += `<div class="feed" style="margin-top:10px">${v.candidates.map(id => `<div>${esc(nameOf(id))}: <b>${v.counts[id]}</b> / ${v.need}</div>`).join('')}</div>`;
+      html = `<p class="big">🗳️ ${s.phase === 'revote' ? 'Son oylama' : 'Oylama'}</p><p class="soft">Çıkmasını istediğin kişilere dokun (birden fazla seçebilirsin). Gereken oy: <b>${v.need}</b></p>`;
+      if (alive) html += targetButtons(v.candidates.filter(id => id !== s.myId), v.mine, true);
+      html += `<div class="vote-bars">${v.candidates.map(id => `<div class="vote-bar ${v.counts[id] >= v.need ? 'hit' : ''}"><span>${esc(nameOf(id))}</span><span class="track"><span class="fill" style="width:${Math.min(100, v.counts[id] / v.need * 100)}%"></span></span><b>${v.counts[id]}/${v.need}</b></div>`).join('')}</div>`;
       break;
     }
     case 'poll':
-      html = '<h3>❓ Dışarıdakiler</h3><p class="soft">Çıkanların kaçı şehir, kaçı mafya öğrenmek ister misin? (Kim olduğu söylenmez.)</p>';
-      if (alive) html += `<div class="btns"><button class="${s.poll.mine === true ? 'btn-main' : 'btn-ghost'}" id="pollYes">Evet</button><button class="${s.poll.mine === false ? 'btn-main' : 'btn-ghost'}" id="pollNo">Hayır</button></div>`;
+      html = '<p class="big">❓ Dışarıdakiler</p><p class="soft">Çıkanların kaçı şehir, kaçı mafya öğrenmek ister misin? (Kim olduğu söylenmez.)</p>';
+      if (alive) html += `<div class="btns"><button class="${s.poll.mine === true ? 'btn-gold' : 'btn-ghost'}" id="pollYes">EVET</button><button class="${s.poll.mine === false ? 'btn-gold' : 'btn-ghost'}" id="pollNo">HAYIR</button></div>`;
       break;
     case 'night': {
       const opts = s.options || [];
       if (!opts.length) html = me?.team === 'mafia' && alive
-        ? `<h3>🩸 Mafya uyandı</h3><p class="soft">Mafya arkadaşların masada kırmızı çerçeveli. Aşağıdan onlarla yazış ya da konuş.</p>`
-        : alive ? '<h3>😴 Uyuyorsun</h3><p class="soft">Gözlerini kapat, sabahı bekle.</p>' : '';
-      else html = '<h3>🌙 Gece seçimin</h3><p class="soft">Süre bitince seçimin uygulanır. Seçimini değiştirebilirsin.</p>' + opts.map(o => {
-        const chosen = o.chosen?.target;
+        ? '<p class="big">🩸 Mafya uyandı</p><p class="soft">Mafya arkadaşların masada kırmızı çerçeveli. Aşağıdan onlarla yazış ya da konuş.</p>'
+        : alive ? '<p class="big">😴 Uyuyorsun</p><p class="soft">Gözlerini kapat, sabahı bekle.</p>' : '';
+      else html = '<p class="big">🌙 Gece seçimin</p><p class="soft">Süre bitince seçimin uygulanır. İstediğin kadar değiştirebilirsin.</p>' + opts.map(o => {
         let extra = '';
         if (o.type === 'guess') {
           guessRole ||= o.chosen?.role || o.roles[0];
           extra = `<select id="guessRole">${o.roles.map(r => `<option value="${r}" ${r === guessRole ? 'selected' : ''}>${s.roles[r].icon} ${esc(s.roles[r].name)}</option>`).join('')}</select>`;
         }
-        return `<div class="opt" data-type="${o.type}"><b>${esc(o.label)}</b>${extra}${targetButtons(o.targets, chosen, null, ['kill', 'shot', 'guess'].includes(o.type))}
-          <div class="btns"><button class="btn-ghost btn-sm ${o.chosen && o.chosen.target === null ? 'on' : ''}" data-pass="1">${o.chosen && o.chosen.target === null ? '✔ ' : ''}Bu gece kullanma</button></div></div>`;
+        const passed = o.chosen && o.chosen.target === null;
+        return `<div class="opt" data-type="${o.type}"><b>${esc(o.label)}</b>${extra}${targetButtons(o.targets, o.chosen?.target, ['kill', 'shot', 'guess'].includes(o.type))}
+          <div class="btns"><button class="btn-ghost btn-sm btn-pass ${passed ? 'on' : ''}" data-pass="1">${passed ? '✔ ' : ''}BU GECE KULLANMA</button></div></div>`;
       }).join('');
-      if (s.mafiaKill !== undefined && me?.team === 'mafia') html += `<p style="margin-top:12px">🎯 Bu geceki hedef: <b>${s.mafiaKill ? esc(nameOf(s.mafiaKill)) : 'henüz seçilmedi'}</b></p>`;
+      if (s.mafiaKill !== undefined && me?.team === 'mafia') html += `<div class="callout">🎯 Bu geceki hedef: <b>${s.mafiaKill ? esc(nameOf(s.mafiaKill)) : 'henüz seçilmedi'}</b></div>`;
       break;
     }
     case 'over':
-      html = `<p class="winner-banner"><b>${s.winner === 'city' ? '🎉 Şehir kazandı!' : '🩸 Mafya kazandı!'}</b></p>
-        <p class="soft">Herkesin rolü masada görünüyor.</p>
-        <div class="btns"><button class="btn-main" id="restart">Tekrar oyna</button></div>`;
+      html = `<p class="winner-banner" style="color:${s.winner === 'city' ? 'var(--gold-2)' : '#FF4D5A'}">${s.winner === 'city' ? '🎉 Şehir kazandı!' : '🩸 Mafya kazandı!'}</p>
+        <p class="soft" style="text-align:center">Herkesin rolü masada görünüyor.</p>
+        <button class="btn-play" id="restart">TEKRAR OYNA</button>`;
       break;
     default: html = `<p class="big">${esc(s.narrator)}</p>`;
   }
-  if (s.deadReveal) html += `<p class="soft">Dışarıda: ${s.deadReveal.city} şehir, ${s.deadReveal.mafia} mafya.</p>`;
-  el.innerHTML = deadNote + html;
+  if (s.deadReveal) html += `<p class="soft" style="margin-top:10px">Dışarıda: <b class="c-city">${s.deadReveal.city} şehir</b>, <b class="c-mafia">${s.deadReveal.mafia} mafya</b>.</p>`;
+  $('action').innerHTML = deadNote + html;
   wireAction(s);
 }
 
 function wireAction(s) {
   const on = (id, fn) => { const b = $(id); if (b) b.onclick = fn; };
-  on('copy', () => navigator.clipboard?.writeText(`${location.origin}/?oda=${s.code}`));
+  on('copy', () => { navigator.clipboard?.writeText(`${location.origin}/?oda=${s.code}`); $('copy').textContent = 'KOPYALANDI ✔'; });
   on('endSpeech', () => socket.emit('endSpeech'));
   on('chYes', () => socket.emit('challengeAnswer', { accept: true }));
   on('chNo', () => socket.emit('challengeAnswer', { accept: false }));
@@ -260,12 +286,48 @@ $('mafiaForm').onsubmit = e => {
   $('mafiaInput').value = '';
 };
 
+// ---------- cinematic moments ----------
+let cineTimer;
+function cine(title, sub, tone = '') {
+  const el = $('cine');
+  $('cineTitle').textContent = title;
+  $('cineSub').textContent = sub;
+  el.className = 'cine ' + tone;
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(cineTimer);
+  cineTimer = setTimeout(() => el.classList.remove('show'), 2700);
+}
+function cinematic(s) {
+  if (s.phase === prevPhase) return;
+  if (s.phase === 'roles') return revealRole(s);
+  if (!prevPhase) return; // just (re)connected: no fanfare
+  if (s.phase === 'night') cine(`GECE ${s.night}`, s.night === 1 ? 'Mafya birbirini tanıyor' : 'Şehir uyuyor');
+  else if (s.phase === 'morning') cine('SABAH', 'Şehir uyanıyor', 'gold');
+  else if (s.phase === 'vote') cine('OYLAMA', 'Kim oyundan çıksın?', 'red');
+  else if (s.phase === 'speech' && prevPhase === 'roles') cine('GÜN 1', 'Tanışma turu', 'gold');
+  else if (s.phase === 'over') cine(s.winner === 'city' ? 'ŞEHİR KAZANDI' : 'MAFYA KAZANDI', 'Oyun bitti', s.winner === 'city' ? 'gold' : 'red');
+}
+function revealRole(s) {
+  const r = s.roles[s.me.role];
+  $('revealFront').className = `face front t-${r.team}`;
+  $('revealFront').innerHTML = `<div class="big-icon">${r.icon}</div><div class="team">${r.team === 'mafia' ? 'MAFYA' : 'ŞEHİR'}</div><h2>${esc(r.name)}</h2><p>${esc(r.desc)}</p>`;
+  $('flip').classList.remove('on');
+  $('reveal').classList.remove('hidden');
+  setTimeout(() => $('flip').classList.add('on'), 700);
+}
+$('revealOk').onclick = () => $('reveal').classList.add('hidden');
+
+// ---------- timer ----------
 function tick() {
-  const el = $('timer');
-  if (!state || state.left == null) return el.textContent = '';
+  const ring = $('ring');
+  if (!state || state.left == null || state.phase === 'over') { ring.classList.add('off'); return; }
+  ring.classList.remove('off');
   const left = Math.max(0, state.left - (Date.now() - receivedAt));
   const sec = Math.ceil(left / 1000);
-  el.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
-  el.classList.toggle('low', sec <= 10);
+  $('timer').textContent = sec >= 60 ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : sec;
+  $('ringFg').style.strokeDashoffset = 169.6 * (1 - left / (state.total || 1));
+  ring.classList.toggle('low', sec <= 10);
+  if (state.phase !== 'roles' && !$('reveal').classList.contains('hidden') && left === 0) $('reveal').classList.add('hidden');
 }
 setInterval(tick, 250);
