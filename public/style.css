@@ -317,7 +317,8 @@ button:disabled { cursor: not-allowed; opacity: .5; }
   background: radial-gradient(ellipse at 50% 40%, #1E160E, #030406 70%); transition: opacity .9s, transform .9s, filter .9s; }
 .splash.out { opacity: 0; transform: scale(1.08); filter: blur(6px); pointer-events: none; }
 .splash-inner { display: grid; gap: 18px; justify-items: center; animation: rise 1.4s both; }
-.splash .logo { font-size: clamp(90px, 16vw, 190px); }
+.splash .logo { font-size: clamp(56px, 18vw, 190px); }
+.splash .logo-kicker { letter-spacing: clamp(2px, 1vw, 6px); }
 .splash-enter { width: auto; padding: 18px 54px; margin-top: 10px; }
 .splash-hint { color: var(--soft); font-size: 14px; letter-spacing: 1px; }
 
