@@ -99,6 +99,14 @@ test('sniper shield and pehlivan lives stop mafia kills', () => {
   assert.equal(isAlive(g, 'p10'), false);
 });
 
+test('speech order starts at a seat, wraps round, skips dead and silenced', () => {
+  const g = freshN(12);
+  G.byId(g, 'p8').alive = false;
+  G.byId(g, 'p1').silenced = true;
+  assert.deepStrictEqual(G.speechOrder(g, 7).map(p => p.id), ['p7', 'p9', 'p10', 'p11', 'p0', 'p2', 'p3', 'p4', 'p5', 'p6']);
+  assert.equal(G.speechOrder(g, 8)[0].id, 'p9'); // start seat dead → next living player opens
+});
+
 test('fedai and terrorist take someone along', () => {
   const g = freshN(16); // p9 terorist, p13 fedai
   assert.equal(G.fedaiStrike(g, 'p13', 'p0'), 'P0');

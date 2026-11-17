@@ -78,6 +78,7 @@ class Room {
 
   start() {
     this.g = G.createGame(G.shuffle(this.players));
+    this.mafiaCount = this.g.players.filter(p => p.team === 'mafia').length;
     this.set('roles', SECS.roles, () => this.startSpeeches(true), 'Rolüne bak ve kimseye söyleme! 🤫');
   }
 
@@ -86,9 +87,14 @@ class Room {
     this.intro = intro;
     this.spoken = new Set();
     this.challengeUsed = new Set();
-    this.queue = G.alive(this.g).filter(p => !p.silenced).map(p => ({ id: p.id, kind: 'speech', secs: SECS.speech }));
+    // Day 1 starts at a random seat; each later day starts (mafia count) seats further round the table.
+    const n = this.g.players.length;
+    this.startSeat = intro ? crypto.randomInt(n) : (this.startSeat + this.mafiaCount) % n;
+    const order = G.speechOrder(this.g, this.startSeat);
+    this.queue = order.map(p => ({ id: p.id, kind: 'speech', secs: SECS.speech }));
     const silenced = G.alive(this.g).filter(p => p.silenced);
     if (silenced.length) this.say(`${silenced.map(p => p.name).join(', ')} bugün susturuldu 🤐`);
+    if (order.length) this.say(`Bugün konuşmaya ${order[0].name} başlıyor.`);
     this.nextSpeaker();
   }
 

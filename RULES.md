@@ -51,7 +51,8 @@ A Doktor save does not use up the Sniper's shield or a Pehlivan life.
 2. **Day 1 (introductions)** – everyone speaks 50 s in seat order. No vote.
 3. **Night 1** – only the mafia wake up for 20 s and see each other (voice + chat between them). No actions.
 4. **Morning** – the narrator says who left the game (roles are not shown). If there are dead players, a quick yes/no vote: if most living players say yes, everyone sees how many of the dead were city and how many mafia (not who).
-5. **Day** – everyone alive speaks 50 s (silenced players are skipped).
+5. **Day** – everyone alive speaks 50 s (silenced players are skipped), going round the table.
+   Day 1 starts at a random seat; each later day starts **mafia count** seats further (e.g. seat 3 with 4 mafia → seat 7 next day). If that player is out, the next living one starts.
    **Challenge:** once per day, a player who has already spoken can ask the current speaker for 30 s. If the speaker accepts, the requester gets 30 s **extra** after the speaker's turn.
 6. **Vote** – everyone may vote for as many players as they like. Needed votes = half of living players, rounded up (9 → 5, 8 → 4, 7 → 4).
    Everyone who reaches it gets 50 s defence, then a second vote among them only. Still reaching it: one → out; several → coin flip, the loser leaves. Nobody → nobody leaves.

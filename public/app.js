@@ -10,6 +10,32 @@ const voice = new Voice(socket);
 $('skyline').innerHTML = ART.skyline();
 $('heroNarrator').innerHTML = ART.narratorCopy('H');
 $('stageNarrator').innerHTML = ART.narratorCopy('S');
+$('props').innerHTML = ART.props;
+
+// ---------- intro, sound, parallax ----------
+$('enter').onclick = () => {
+  SFX.start();
+  SFX.play.reveal();
+  $('splash').classList.add('out');
+  setTimeout(() => $('splash').remove(), 900);
+};
+const sp = $('soundPanel');
+$('sndOn').checked = SFX.settings.on; $('sndMusic').value = SFX.settings.music; $('sndFx').value = SFX.settings.fx;
+$('sndOn').onchange = e => { SFX.start(); SFX.set('on', e.target.checked); syncSoundIcons(); };
+$('sndMusic').oninput = e => SFX.set('music', +e.target.value);
+$('sndFx').oninput = e => { SFX.set('fx', +e.target.value); SFX.play.click(); };
+function syncSoundIcons() { document.querySelectorAll('.sound-btn').forEach(b => { b.textContent = SFX.settings.on ? '🔊' : '🔇'; }); }
+syncSoundIcons();
+document.querySelectorAll('.sound-btn').forEach(b => b.onclick = e => { e.stopPropagation(); sp.classList.toggle('hidden'); });
+document.addEventListener('click', e => {
+  if (!sp.contains(e.target)) sp.classList.add('hidden');
+  if (e.target.closest('button')) SFX.play.click();
+});
+addEventListener('pointermove', e => {
+  if ($('home').classList.contains('hidden')) return;
+  document.body.style.setProperty('--px', (e.clientX / innerWidth - .5).toFixed(3));
+  document.body.style.setProperty('--py', (e.clientY / innerHeight - .5).toFixed(3));
+});
 
 // ---------- main menu ----------
 $('name').value = localStorage.getItem('mafya-name') || '';
@@ -38,7 +64,8 @@ $('joinCode').onclick = () => go('join', { code: $('code').value.trim().toUpperC
 $('code').onkeydown = e => { if (e.key === 'Enter') $('joinCode').click(); };
 $('name').onkeydown = e => { if (e.key === 'Enter') $('quickPlay').click(); };
 $('roomList').onclick = e => { const c = e.target.closest('[data-join]')?.dataset.join; if (c) go('join', { code: c }); };
-$('howBtn').onclick = () => $('howModal').classList.remove('hidden');
+$('navHow').onclick = () => { $('howModal').classList.remove('hidden'); $('howModal').querySelector('.modal-box').scrollTop = 0; };
+$('navRoles').onclick = () => { $('howModal').classList.remove('hidden'); $('roleGrid').scrollIntoView({ block: 'start' }); };
 $('howClose').onclick = () => $('howModal').classList.add('hidden');
 $('howModal').onclick = e => { if (e.target === $('howModal')) $('howModal').classList.add('hidden'); };
 addEventListener('keydown', e => { if (e.key === 'Escape') $('howModal').classList.add('hidden'); });
@@ -49,8 +76,7 @@ fetch('/roles.json').then(r => r.json()).then(roles => {
 
 socket.on('rooms', ({ rooms, online }) => {
   openRooms = rooms;
-  $('online').textContent = `${online} çevrimiçi`;
-  $('roomList').innerHTML = rooms.length
+  $('online').textContent = `${online} çevrimiçi`;  $('roomList').innerHTML = rooms.length
     ? rooms.map(r => `<div class="room-item"><span class="rc">${esc(r.code)}</span>
         <span class="seats-bar" title="${r.count}/${r.size}">${Array.from({ length: r.size }, (_, i) => `<i class="${i < r.count ? 'on' : ''}"></i>`).join('')}</span>
         <button class="btn-gold btn-sm" data-join="${esc(r.code)}">KATIL</button></div>`).join('')
@@ -79,8 +105,8 @@ $('leave').onclick = () => {
   showHome();
 };
 function showHome() {
-  $('home').classList.remove('hidden'); $('room').classList.add('hidden');
-  document.documentElement.dataset.phase = 'night'; FX.mode('night');
+  $('home').classList.remove('hidden'); $('room').classList.add('hidden'); $('topnav').classList.remove('hidden');
+  document.documentElement.dataset.phase = 'night'; FX.mode('night'); SFX.mode('night'); SFX.duck(false);
 }
 
 // ---------- game room ----------
@@ -96,17 +122,22 @@ const nameOf = id => state.players.find(p => p.id === id)?.name || '?';
 function render() {
   const s = state;
   $('home').classList.add('hidden');
+  $('topnav').classList.add('hidden');
   $('room').classList.remove('hidden');
   const mode = DARK.includes(s.phase) ? 'night' : 'day';
   document.documentElement.dataset.phase = mode;
   FX.mode(mode);
+  SFX.mode(mode);
+  SFX.duck(s.audio.hear.length > 0 || s.audio.sendTo.length > 0); // keep voices clear
   $('roomCode').textContent = s.code;
   const [title, sub] = PHASES[s.phase];
   $('phaseLabel').textContent = s.phase === 'night' ? `Gece ${s.night}` : s.phase === 'speech' ? `Gün ${s.day}` : title;
   $('phaseSub').textContent = s.phase === 'speech' && s.day === 1 ? 'Tanışma turu' : s.phase === 'lobby' ? `${s.players.length}/${s.size} oyuncu` : sub;
   const text = s.narrator || (s.phase === 'lobby' ? `Oyuncular bekleniyor… (${s.players.length}/${s.size})` : '');
   const sub$ = $('narrator');
-  if (sub$.textContent !== text) { sub$.textContent = text; sub$.classList.remove('pop'); void sub$.offsetWidth; sub$.classList.add('pop'); }
+  if (sub$.textContent !== text) {
+    if (prevPhase && /oyundan çıktı|vurdu|götürdü/.test(text)) SFX.play.death();
+    sub$.textContent = text; sub$.classList.remove('pop'); void sub$.offsetWidth; sub$.classList.add('pop'); }
   $('stage').classList.toggle('talking', ['morning', 'announce', 'coin', 'roles', 'starting', 'over'].includes(s.phase));
   renderSeats(s);
   renderRole(s);
@@ -152,7 +183,7 @@ function renderRole(s) {
   const card = $('roleCard');
   if (!s.me) return card.classList.add('hidden');
   const r = s.roles[s.me.role];
-  card.className = `glass role-card t-${r.team}` + (roleHidden ? ' blur' : '');
+  card.className = `glass role-card deco t-${r.team}` + (roleHidden ? ' blur' : '');
   card.innerHTML = `
     <div class="body"><div class="head"><span class="icon">${r.icon}</span><div>
       <div class="team">${r.team === 'mafia' ? 'MAFYA' : 'ŞEHİR'}</div><div class="rname">${esc(r.name)}</div></div></div>
@@ -320,11 +351,14 @@ function cinematic(s) {
   if (s.phase === prevPhase) return;
   if (s.phase === 'roles') return revealRole(s);
   if (!prevPhase) return; // just (re)connected: no fanfare
-  if (s.phase === 'night') cine(`GECE ${s.night}`, s.night === 1 ? 'Mafya birbirini tanıyor' : 'Şehir uyuyor');
-  else if (s.phase === 'morning') cine('SABAH', 'Şehir uyanıyor', 'gold');
-  else if (s.phase === 'vote') cine('OYLAMA', 'Kim oyundan çıksın?', 'red');
-  else if (s.phase === 'speech' && prevPhase === 'roles') cine('GÜN 1', 'Tanışma turu', 'gold');
-  else if (s.phase === 'over') cine(s.winner === 'city' ? 'ŞEHİR KAZANDI' : 'MAFYA KAZANDI', 'Oyun bitti', s.winner === 'city' ? 'gold' : 'red');
+  if (s.phase === 'night') { cine(`GECE ${s.night}`, s.night === 1 ? 'Mafya birbirini tanıyor' : 'Şehir uyuyor'); SFX.play.night(); }
+  else if (s.phase === 'morning') { cine('SABAH', 'Şehir uyanıyor', 'gold'); SFX.play.morning(); }
+  else if (s.phase === 'vote') { cine('OYLAMA', 'Kim oyundan çıksın?', 'red'); SFX.play.vote(); }
+  else if (s.phase === 'speech' && prevPhase === 'roles') { cine('GÜN 1', 'Tanışma turu', 'gold'); SFX.play.morning(); }
+  else if (s.phase === 'over') {
+    cine(s.winner === 'city' ? 'ŞEHİR KAZANDI' : 'MAFYA KAZANDI', 'Oyun bitti', s.winner === 'city' ? 'gold' : 'red');
+    s.me?.team === s.winner ? SFX.play.win() : SFX.play.lose();
+  }
 }
 function revealRole(s) {
   const r = s.roles[s.me.role];
@@ -332,7 +366,7 @@ function revealRole(s) {
   $('revealFront').innerHTML = `<div class="big-icon">${r.icon}</div><div class="team">${r.team === 'mafia' ? 'MAFYA' : 'ŞEHİR'}</div><h2>${esc(r.name)}</h2><p>${esc(r.desc)}</p>`;
   $('flip').classList.remove('on');
   $('reveal').classList.remove('hidden');
-  setTimeout(() => $('flip').classList.add('on'), 700);
+  setTimeout(() => { $('flip').classList.add('on'); SFX.play.reveal(); }, 700);
 }
 $('revealOk').onclick = () => $('reveal').classList.add('hidden');
 
@@ -346,6 +380,9 @@ function tick() {
   $('timer').textContent = sec >= 60 ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : sec;
   $('ringFg').style.strokeDashoffset = 169.6 * (1 - left / (state.total || 1));
   ring.classList.toggle('low', sec <= 10);
+  if (sec <= 5 && sec > 0 && sec !== lastTick) SFX.play.tick();
+  lastTick = sec;
   if (state.phase !== 'roles' && !$('reveal').classList.contains('hidden') && left === 0) $('reveal').classList.add('hidden');
 }
+let lastTick = null;
 setInterval(tick, 250);

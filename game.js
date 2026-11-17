@@ -215,6 +215,12 @@ function terroristRevenge(g, terroristId, targetId) {
   return t.name;
 }
 
+// Who speaks today, in seat order starting at startSeat (wrapping round), skipping dead and silenced players.
+function speechOrder(g, startSeat) {
+  const n = g.players.length;
+  return Array.from({ length: n }, (_, k) => g.players[(startSeat + k) % n]).filter(p => p.alive && !p.silenced);
+}
+
 // 'city' | 'mafia' | null. Mafia parity only counts as night falls.
 function winner(g, nightFalling) {
   const m = alive(g).filter(p => p.team === 'mafia').length;
@@ -229,4 +235,4 @@ function deadCounts(g) {
   return { city: dead.filter(p => p.team === 'city').length, mafia: dead.filter(p => p.team === 'mafia').length };
 }
 
-module.exports = { ROLES, SETUPS, createGame, nightOptions, validAction, resolveNight, tally, useGun, fedaiStrike, terroristRevenge, winner, needed, mafiaLeader, deadCounts, byId, alive, shuffle };
+module.exports = { ROLES, SETUPS, createGame, nightOptions, validAction, resolveNight, tally, useGun, fedaiStrike, speechOrder, terroristRevenge, winner, needed, mafiaLeader, deadCounts, byId, alive, shuffle };

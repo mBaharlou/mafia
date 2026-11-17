@@ -94,6 +94,47 @@ ART.portrait = id => {
   </svg>`;
 };
 
+// Props lying on the felt: a stack of chips, two face-down cards, a whiskey glass and a revolver silhouette.
+ART.props = `
+<svg viewBox="0 0 600 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <defs>
+    <linearGradient id="chipR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D23A45"/><stop offset="1" stop-color="#7E1219"/></linearGradient>
+    <linearGradient id="chipK" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2C313C"/><stop offset="1" stop-color="#0E1015"/></linearGradient>
+    <linearGradient id="cardB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B1118"/><stop offset="1" stop-color="#2A070B"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity=".05"/><stop offset="1" stop-color="#fff" stop-opacity=".18"/></linearGradient>
+  </defs>
+  <!-- chips -->
+  <g transform="translate(70 150)">
+    ${[0, 1, 2, 3, 4].map(i => `<ellipse cx="0" cy="${-i * 7}" rx="28" ry="10" fill="url(#${i % 2 ? 'chipK' : 'chipR'})" stroke="#F2B544" stroke-opacity=".5" stroke-dasharray="6 5"/>`).join('')}
+    <g transform="translate(50 18)"><ellipse rx="28" ry="10" fill="url(#chipK)" stroke="#F2B544" stroke-opacity=".5" stroke-dasharray="6 5"/></g>
+  </g>
+  <!-- cards -->
+  <g transform="translate(460 170) rotate(-18)">
+    <rect x="-34" y="-48" width="68" height="96" rx="7" fill="url(#cardB)" stroke="#F2B544" stroke-opacity=".55"/>
+    <rect x="-27" y="-41" width="54" height="82" rx="4" fill="none" stroke="#F2B544" stroke-opacity=".35"/>
+  </g>
+  <g transform="translate(500 160) rotate(9)">
+    <rect x="-34" y="-48" width="68" height="96" rx="7" fill="url(#cardB)" stroke="#F2B544" stroke-opacity=".55"/>
+    <rect x="-27" y="-41" width="54" height="82" rx="4" fill="none" stroke="#F2B544" stroke-opacity=".35"/>
+    <text y="10" text-anchor="middle" font-family="Playfair Display, serif" font-weight="900" font-size="30" fill="#F2B544" fill-opacity=".6">M</text>
+  </g>
+  <!-- whiskey glass -->
+  <g transform="translate(150 60)">
+    <ellipse cx="0" cy="46" rx="26" ry="7" fill="#000" opacity=".35"/>
+    <path d="M-24 0 L-20 44 Q0 50 20 44 L24 0 Z" fill="url(#glass)" stroke="#fff" stroke-opacity=".25"/>
+    <path d="M-21.5 22 L-20 44 Q0 50 20 44 L21.5 22 Q0 27 -21.5 22 Z" fill="#B8681C" opacity=".75"/>
+    <ellipse cx="0" cy="0" rx="24" ry="6" fill="none" stroke="#fff" stroke-opacity=".3"/>
+  </g>
+  <!-- revolver -->
+  <g transform="translate(430 70) rotate(-8)" fill="#0B0D12" opacity=".9">
+    <rect x="-60" y="-6" width="78" height="11" rx="2"/>
+    <rect x="10" y="-11" width="34" height="22" rx="5"/>
+    <path d="M40 -8 L62 -8 L74 30 L56 34 L46 10 Z"/>
+    <path d="M24 10 Q30 24 40 14" stroke="#0B0D12" stroke-width="4" fill="none"/>
+    <rect x="-60" y="-6" width="78" height="2" fill="#F2B544" opacity=".25"/>
+  </g>
+</svg>`;
+
 // City skyline with randomly lit windows.
 ART.skyline = (seed = 3) => {
   let s = seed;
