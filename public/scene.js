@@ -142,6 +142,7 @@
   let offset = 0;
   let hiddenAt = 0;
   let hasDay = false;
+  let fadeSec = 1.8;
   let tod = 1, todTarget = 1, todFrom = 1, todTo = 1, todT = null, todArmed = false, todDelay = 0, todReady = false;
   let godPose = 'idle', godFrom = 'idle', godPoseT = -9;
   let redT = null;
@@ -260,6 +261,8 @@
     const scene = manifest.scenes[sceneId];
     const bg = scene.bg[layoutName] || scene.bg.desktop;
     hasDay = !!(bg && bg.day);
+    const fadeMs = Number(scene.day_night && scene.day_night.duration_ms);
+    fadeSec = fadeMs > 0 ? fadeMs / 1000 : 1.8;
     $('sceneBgNight').style.backgroundImage = `url("${bg.night}")`;
     $('sceneBgDay').style.backgroundImage = bg.day ? `url("${bg.day}")` : 'none';
     preload(bg.night);
@@ -615,7 +618,7 @@
     todDelay = now() + (reduced ? 0 : 0.4);
   }
 
-  function todDur() { return reduced ? 0.3 : 1.8; }
+  function todDur() { return reduced ? 0.3 : fadeSec; }
 
   function sampleN(t) {
     if (todT == null) return tod;

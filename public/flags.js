@@ -40,8 +40,14 @@
     for (const k in v) el.style.setProperty(k, v[k]);
     el.style.fontSize = o.fs + 'px';
     if (o.pad) el.style.setProperty('--pad', o.pad);
-    const knob = s.rod.knob === 'ball' ? '<i class="knob l"></i><i class="knob r"></i>' : '';
+    const knobName = /^[a-z]+$/.test(s.rod.knob || '') && s.rod.knob !== 'none' ? s.rod.knob : '';
+    const knob = knobName
+      ? `<i class="knob l"><img src="/scene/flags/knobs/${knobName}.svg" alt=""></i><i class="knob r"><img src="/scene/flags/knobs/${knobName}.svg" alt=""></i>`
+      : '';
     el.innerHTML = `<span class="meta"></span><div class="pole"></div><div class="rod">${knob}</div><div class="cloth" style="max-width:${o.maxw}px"><span class="tab">${o.phone ? '★' : 'SEN'}</span><svg class="snd" viewBox="0 0 12 10" aria-hidden="true"><rect x="0" y="3" width="2.4" height="4" rx="1"/><rect x="4.5" y="1" width="2.4" height="8" rx="1"/><rect x="9" y="2.5" width="2.4" height="5" rx="1"/></svg><span class="nm"></span></div><div class="fringe"></div>`;
+    el.querySelectorAll('.knob img').forEach(img => {
+      img.addEventListener('error', () => img.remove());
+    });
     const name = o.name || '';
     el.querySelector('.nm').textContent = name;
     el.title = name;

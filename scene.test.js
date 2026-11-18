@@ -69,6 +69,11 @@ test('unknown scene falls back to meydan and only the free skin renders', () => 
   assert.equal(manifest.scenes.meydan.bg.desktop.day.endsWith('meydan-day-desktop.webp'), true);
   assert.equal(manifest.scenes.cember.bg.desktop.day.endsWith('cember-day-desktop.webp'), true);
   assert.equal(manifest.scenes.cember.bg.phone.day.endsWith('cember-day-phone.webp'), true);
+  assert.equal(manifest.scenes.meydan.day_night.duration_ms, 1800);
+  assert.equal(manifest.scenes.cember.day_night.duration_ms, 1800);
+  for (const rel of ['flags/knobs/ball.svg', 'flags/knobs/star.svg', 'flags/ornaments/crown.svg', 'flags/ornaments/crescent.svg', 'flags/ornaments/fedora.svg', 'flags/patterns/stars.svg']) {
+    assert.ok(fs.existsSync(path.join(__dirname, 'public', 'scene', rel)), rel);
+  }
   assert.equal(manifest.note, undefined);
   for (const skin of Object.values(manifest.flag_skins.skins)) {
     assert.equal(skinPassesAA(skin), true, skin.id);
