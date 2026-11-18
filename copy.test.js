@@ -9,6 +9,7 @@ const FILES = [
   'public/app.js',
   'public/style.css',
   'public/art.js',
+  'public/characters/characters.json',
   'public/fx.js',
   'public/sound.js',
   'public/voice.js',

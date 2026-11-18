@@ -73,7 +73,7 @@ test('socket hardening', { timeout: 60_000 }, async (t) => {
     await t.test('malformed payloads do not crash the process', async () => {
       const sock = client();
       await once(sock, 'connect');
-      const junk = [null, undefined, 0, 'nope', [], { name: 1, size: '9' }, { name: 'A'.repeat(5000), size: 9 }];
+      const junk = [null, undefined, 0, 'nope', [], { name: 1, size: '9' }, { name: 'A'.repeat(5000), size: 9, characterId: 'fitil' }];
       for (const ev of ['create', 'join', 'resume', 'rtc', 'vote', 'poll', 'action', 'gun', 'fedai', 'revenge', 'mafiaChat', 'challengeAnswer']) {
         for (const payload of junk) sock.emit(ev, payload);
       }
@@ -86,14 +86,14 @@ test('socket hardening', { timeout: 60_000 }, async (t) => {
 
       const host = client();
       const joined = once(host, 'joined');
-      host.emit('create', { name: 'Ayşe', size: 9 });
+      host.emit('create', { name: 'Ayşe', size: 9, characterId: 'fitil' });
       const info = await joined;
       assert.match(info.code, /^[A-Z]{4}$/);
       assert.equal(server.listening, true);
 
       const guest = client();
       const guestJoined = once(guest, 'joined');
-      guest.emit('join', { name: 'Ali', code: info.code.toLowerCase() });
+      guest.emit('join', { name: 'Ali', code: info.code.toLowerCase(), characterId: 'pelus' });
       const guestInfo = await guestJoined;
       assert.equal(guestInfo.code, info.code);
     });
@@ -102,12 +102,12 @@ test('socket hardening', { timeout: 60_000 }, async (t) => {
       await settle();
       const sock = client();
       await once(sock, 'connect');
-      for (let i = 0; i < 20; i++) sock.emit('join', { name: 'Spam', code: 'ZZZZ' });
+      for (let i = 0; i < 20; i++) sock.emit('join', { name: 'Spam', code: 'ZZZZ', characterId: 'fitil' });
       await waitFor(() => sock._errs.some(m => m.includes('Çok hızlı')));
       assert.ok(sock._errs.some(m => m.includes('oda yok')));
       const other = client();
       const joined = once(other, 'joined');
-      other.emit('create', { name: 'Hâlâ', size: 9 });
+      other.emit('create', { name: 'Hâlâ', size: 9, characterId: 'fitil' });
       await joined;
       assert.equal(server.listening, true);
     });
@@ -118,24 +118,24 @@ test('socket hardening', { timeout: 60_000 }, async (t) => {
       for (let i = 0; i < 3; i++) {
         const c = client();
         const joined = once(c, 'joined');
-        c.emit('create', { name: 'Ev' + i, size: 9 });
+        c.emit('create', { name: 'Ev' + i, size: 9, characterId: 'fitil' });
         made.push(await joined);
       }
       assert.equal(rooms.size, 3);
       const fourth = client();
       const err = once(fourth, 'err');
-      fourth.emit('create', { name: 'Ev3', size: 9 });
+      fourth.emit('create', { name: 'Ev3', size: 9, characterId: 'fitil' });
       assert.match(await err, /en fazla 3 masa/);
       await wait(40);
       assert.equal(rooms.size, 3);
       const guest = client();
       const guestJoined = once(guest, 'joined');
-      guest.emit('join', { name: 'Misafir', code: made[0].code });
+      guest.emit('join', { name: 'Misafir', code: made[0].code, characterId: 'goz' });
       await guestJoined;
       assert.equal(rooms.size, 3);
       const fifth = client();
       const fifthErr = once(fifth, 'err');
-      fifth.emit('create', { name: 'Ev4', size: 9 });
+      fifth.emit('create', { name: 'Ev4', size: 9, characterId: 'fitil' });
       assert.match(await fifthErr, /en fazla 3 masa/);
       assert.equal(rooms.size, 3);
     });
@@ -146,7 +146,7 @@ test('socket hardening', { timeout: 60_000 }, async (t) => {
       for (let i = 0; i < 3; i++) {
         const c = client({ extraHeaders: { cookie: `mafya_sid=${sid}`, 'x-forwarded-for': `198.51.100.${10 + i}` } });
         const joined = once(c, 'joined');
-        c.emit('create', { name: 'Oturum' + i, size: 9 });
+        c.emit('create', { name: 'Oturum' + i, size: 9, characterId: 'fitil' });
         await joined;
       }
       const ips = new Set([...rooms.values()].map(r => r.creatorIp));
@@ -154,7 +154,7 @@ test('socket hardening', { timeout: 60_000 }, async (t) => {
       assert.ok(!ips.has('1.2.3.4'));
       const fourth = client({ extraHeaders: { cookie: `mafya_sid=${sid}`, 'x-forwarded-for': '1.2.3.4, 198.51.100.99' } });
       const err = once(fourth, 'err');
-      fourth.emit('create', { name: 'Oturum3', size: 9 });
+      fourth.emit('create', { name: 'Oturum3', size: 9, characterId: 'fitil' });
       assert.match(await err, /en fazla 3 masa/);
       await wait(40);
       assert.equal(rooms.size, 3);
@@ -167,14 +167,14 @@ test('socket hardening', { timeout: 60_000 }, async (t) => {
       const host = client();
       const hostBox = track(host);
       const hostJoined = once(host, 'joined');
-      host.emit('create', { name: 'P0', size: 9 });
+      host.emit('create', { name: 'P0', size: 9, characterId: 'fitil' });
       const first = await hostJoined;
       members.push({ socket: host, box: hostBox, token: first.token });
       for (let i = 1; i < 9; i++) {
         const c = client();
         const box = track(c);
         const joined = once(c, 'joined');
-        c.emit('join', { name: 'P' + i, code: first.code });
+        c.emit('join', { name: 'P' + i, code: first.code, characterId: 'fitil' });
         const info = await joined;
         members.push({ socket: c, box, token: info.token });
       }
@@ -282,7 +282,7 @@ test('socket hardening', { timeout: 60_000 }, async (t) => {
       assert.equal(server.listening, true);
       const next = client();
       const joined = once(next, 'joined');
-      next.emit('create', { name: 'Ayaktayız', size: 9 });
+      next.emit('create', { name: 'Ayaktayız', size: 9, characterId: 'fitil' });
       await joined;
     });
   } finally {
