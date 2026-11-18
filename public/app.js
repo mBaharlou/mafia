@@ -222,16 +222,12 @@ function renderSeats(s) {
   stage.querySelectorAll('.seat').forEach(e => e.remove());
   const n = s.size;
   stage.dataset.size = n;
-  const span = { 9: 280, 12: 296, 16: 310 }[n] || 300, big = n > 9 ? 2 : 0;
   s.players.forEach(p => {
     // seats run clockwise around the table, leaving the top free for the narrator
-    const deg = -90 + (360 - span) / 2 + p.seat * span / (n - 1);
-    const a = deg * Math.PI / 180;
     const el = document.createElement('div');
     const speaking = s.speaker?.id === p.id;
     el.className = 'seat' + (p.id === s.myId ? ' me' : '') + (!p.alive ? ' dead' : '') + (p.mate ? ' mate' : '') + (speaking ? ' speaking' : '');
-    el.style.left = 50 + (42 + big) * Math.cos(a) + '%';
-    el.style.top = 58 + (34 + big) * Math.sin(a) + '%';
+    el.dataset.seat = String(p.seat);
     const role = p.role && s.roles[p.role];
     const votes = s.vote?.counts[p.id];
     const showRole = role && (s.phase === 'over' || p.id !== s.myId);
@@ -246,7 +242,195 @@ function renderSeats(s) {
         : p.mate && p.id !== s.myId ? '<div class="tag" style="color:var(--mafia)">🩸 Mafya</div>' : ''}`;
     stage.appendChild(el);
   });
+  layoutTable();
 }
+
+// Fit every nickname on the oval. When the stage is too narrow or the window is too short
+// (a phone on its side), seats become a wrapping roster instead of an overlapping ring.
+let layoutLock = false;
+function layoutTable() {
+  const stage = $('stage');
+  if (!stage || layoutLock || $('room').classList.contains('hidden')) return;
+  layoutLock = true;
+  try {
+    const seats = [...stage.querySelectorAll('.seat')];
+    const n = Number(stage.dataset.size) || seats.length || 9;
+    const W = stage.clientWidth || stage.parentElement?.clientWidth || window.innerWidth;
+    const short = window.innerHeight <= 500;
+    const narrow = window.innerWidth <= 680 || W < 560;
+    const clearScenery = () => {
+      for (const el of [stage.querySelector('.stage-narrator'), stage.querySelector('.table')]) {
+        if (!el) continue;
+        el.style.height = el.style.width = el.style.left = el.style.right = el.style.top = el.style.transform = '';
+      }
+    };
+    const useRoster = () => {
+      stage.classList.add('is-roster');
+      stage.style.height = stage.style.minHeight = stage.style.maxHeight = '';
+      for (const seat of seats) seat.style.left = seat.style.top = '';
+      clearScenery();
+    };
+    layoutPanels();
+    if (!seats.length || short || narrow) { useRoster(); return; }
+
+    const portrait = n >= 16 ? (W >= 1100 ? 64 : 52) : n >= 12 ? (W >= 1100 ? 72 : 58) : (W >= 1100 ? 80 : 66);
+    stage.style.setProperty('--portrait', portrait + 'px');
+    const gap = 8;
+    const sideN = { 9: 2, 12: 3, 16: 4 }[n] || 2;
+    const topN = { 9: 3, 12: 3, 16: 4 }[n] || 3;
+    const botN = { 9: 2, 12: 3, 16: 4 }[n] || 2;
+    const measure = plateW => {
+      stage.style.setProperty('--plate-w', plateW + 'px');
+      let h = portrait + 28;
+      for (const seat of seats) h = Math.max(h, seat.offsetHeight);
+      return h;
+    };
+    // Seats sit on a rectangle so 16 full nicknames stay readable. The top edge
+    // is split, leaving the narrator in the middle.
+    const orbit = (w, h, extra) => {
+      const yTop = h / 2 + 8;
+      const ySide0 = yTop + h + gap;
+      const sideSpan = Math.max(0, (sideN - 1) * (h + gap)) + extra;
+      const ySide1 = ySide0 + sideSpan;
+      const yBot = ySide1 + h + gap;
+      const H = Math.ceil(yBot + h / 2 + 8);
+      const xL = w / 2 + 6, xR = W - w / 2 - 6;
+      const row = (count, y, x0, x1, reverse) => {
+        const pts = [];
+        for (let i = 0; i < count; i++) {
+          const t = count === 1 ? .5 : i / (count - 1);
+          pts.push({ x: x0 + (x1 - x0) * t, y });
+        }
+        return reverse ? pts.reverse() : pts;
+      };
+      const col = (count, x, y0, y1, reverse) => {
+        const pts = [];
+        for (let i = 0; i < count; i++) {
+          const t = count === 1 ? .5 : i / (count - 1);
+          pts.push({ x, y: y0 + (y1 - y0) * t });
+        }
+        return reverse ? pts.reverse() : pts;
+      };
+      const leftN = Math.ceil(topN / 2);
+      const pts = [
+        ...row(leftN, yTop, xL, Math.min(W * .30, xR - w)),
+        ...row(topN - leftN, yTop, Math.max(W * .70, xL + w), xR),
+        ...col(sideN, xR, ySide0, ySide1),
+        ...row(botN, yBot, xL, xR, true),
+        ...col(sideN, xL, ySide0, ySide1, true),
+      ];
+      const hit = pts.some((p, i) => pts.some((q, j) => j > i && Math.abs(p.x - q.x) < w + 4 && Math.abs(p.y - q.y) < h + 4));
+      const inside = pts.every(p => p.x - w / 2 >= 0 && p.x + w / 2 <= W && p.y - h / 2 >= 0 && p.y + h / 2 <= H);
+      return pts.length === n && !hit && inside ? { pts, H, yTop } : null;
+    };
+
+    stage.classList.remove('is-roster');
+    let solved = null;
+    const widest = Math.min(168, Math.max(124, Math.floor((W - 48) / 4)));
+    for (let w = widest; w >= 108; w -= 8) {
+      const h = measure(w);
+      solved = orbit(w, h, 0);
+      if (solved) { solved.w = w; solved.h = h; break; }
+    }
+    if (!solved) { useRoster(); return; }
+
+    const roomFor = window.innerHeight - 120;
+    if (roomFor > solved.H + 24) {
+      const extra = Math.min(roomFor - solved.H, 200);
+      const grown = orbit(solved.w, solved.h, extra);
+      if (grown) { grown.w = solved.w; grown.h = solved.h; solved = grown; }
+    }
+    stage.style.setProperty('--plate-w', solved.w + 'px');
+    stage.style.height = solved.H + 'px';
+    stage.style.minHeight = solved.H + 'px';
+    stage.style.maxHeight = 'none';
+    for (const seat of seats) {
+      const p = solved.pts[Number(seat.dataset.seat)];
+      if (!p) continue;
+      seat.style.left = p.x + 'px';
+      seat.style.top = p.y + 'px';
+    }
+
+    const narrator = stage.querySelector('.stage-narrator');
+    const table = stage.querySelector('.table');
+    if (narrator) {
+      const nH = Math.min(portrait * 2.8, solved.H * 0.28, 200);
+      narrator.style.height = nH + 'px';
+      narrator.style.width = '';
+      narrator.style.left = '50%';
+      narrator.style.right = 'auto';
+      narrator.style.top = Math.max(0, solved.yTop - nH * 0.42) + 'px';
+      narrator.style.transform = 'translateX(-50%)';
+    }
+    if (table) {
+      const tW = Math.min(W - solved.w * 2 - 36, W * 0.52);
+      const tH = Math.min(solved.H - solved.h * 2 - 36, solved.H * 0.42);
+      table.style.width = Math.max(160, tW) + 'px';
+      table.style.height = Math.max(110, tH) + 'px';
+      table.style.left = (W - Math.max(160, tW)) / 2 + 'px';
+      table.style.right = 'auto';
+      table.style.top = (solved.H - Math.max(110, tH)) / 2 + 16 + 'px';
+      table.style.transform = '';
+    }
+    const rects = seats.map(el => el.getBoundingClientRect());
+    const stageBox = stage.getBoundingClientRect();
+    let bad = rects.some(r => r.left < -2 || r.right > window.innerWidth + 2 || r.top < stageBox.top - 8 || r.bottom > stageBox.bottom + 8);
+    for (let i = 0; i < rects.length && !bad; i++) {
+      for (let j = i + 1; j < rects.length; j++) {
+        const dx = Math.min(rects[i].right, rects[j].right) - Math.max(rects[i].left, rects[j].left);
+        const dy = Math.min(rects[i].bottom, rects[j].bottom) - Math.max(rects[i].top, rects[j].top);
+        if (dx > 1 && dy > 1) { bad = true; break; }
+      }
+    }
+    if (!bad) {
+      for (const el of stage.querySelectorAll('.plate, .tag')) {
+        if (el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2) { bad = true; break; }
+      }
+    }
+    if (bad) useRoster();
+  } finally {
+    layoutLock = false;
+  }
+}
+
+const stackMq = window.matchMedia('(max-width: 1100px)');
+function layoutPanels() {
+  const action = $('action');
+  const stageWrap = document.querySelector('.stage-wrap');
+  const role = $('roleCard');
+  if (!action || !stageWrap || !role) return;
+  if (stackMq.matches) {
+    if (action.nextElementSibling !== stageWrap) stageWrap.before(action);
+    action.classList.add('action-lead');
+  } else if (action.previousElementSibling !== role) {
+    role.after(action);
+    action.classList.remove('action-lead');
+  }
+}
+stackMq.addEventListener('change', () => { layoutPanels(); layoutTable(); });
+addEventListener('resize', () => {
+  if (document.body.classList.contains('kb-open')) return;
+  layoutTable();
+});
+document.fonts?.ready.then(() => { if (state) layoutTable(); });
+layoutPanels();
+
+let kbTimer = null;
+document.addEventListener('focusin', e => {
+  const t = e.target;
+  if (!(t instanceof HTMLElement) || !t.matches('input, textarea, select')) return;
+  document.body.classList.add('kb-open');
+  const block = t.closest('.card, .chat-form, .row, .mafia-panel, .action') || t;
+  clearTimeout(kbTimer);
+  kbTimer = setTimeout(() => block.scrollIntoView({ block: 'start', inline: 'nearest' }), 280);
+});
+document.addEventListener('focusout', () => {
+  clearTimeout(kbTimer);
+  setTimeout(() => {
+    const a = document.activeElement;
+    if (!a || !a.matches?.('input, textarea, select')) document.body.classList.remove('kb-open');
+  }, 180);
+});
 
 function renderRole(s) {
   const card = $('roleCard');
@@ -455,3 +639,14 @@ function tick() {
 }
 let lastTick = null;
 setInterval(tick, 250);
+
+// Layout previews (?onizle=1) drive render() without a live table. Game rules are untouched.
+if (new URLSearchParams(location.search).has('onizle')) {
+  addEventListener('mafya-preview', e => {
+    state = e.detail;
+    receivedAt = Date.now();
+    prevPhase = state.phase;
+    $('splash')?.remove();
+    render();
+  });
+}
