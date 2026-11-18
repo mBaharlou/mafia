@@ -231,6 +231,18 @@
 <!-- cinematic phase title -->
 <div id="cine" class="cine" aria-live="polite"><div class="bar"></div><div class="cine-text"><div class="cine-title" id="cineTitle"></div><div class="cine-sub" id="cineSub"></div></div><div class="bar"></div></div>
 
+<!-- leave an active game -->
+<div id="leaveModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="leaveText">
+  <div class="modal-box glass deco leave-box">
+    <p id="leaveText">Oyunun ortasında ayrılmak üzeresin. Kalan oyuncuların zamanı ve beklemesi boşa gidebilir. Lütfen sadece gerçekten önemli ve acil bir işin varsa ayrıl. Ayrılmak istediğine emin misin?</p>
+    <div class="leave-actions">
+      <button type="button" class="btn-gold" id="leaveStay">Kal</button>
+      <button type="button" class="btn-ghost" id="leaveGo">Ayrıl</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast hidden" role="alert"></div>
+
 <!-- role reveal -->
 <div id="reveal" class="reveal hidden">
   <div class="reveal-label">ROLÜN</div>

@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SAVE_KEY = 'mafya-session';
 
-let state = null, prevPhase = null, receivedAt = 0, guessRole = null, shooting = false, sacrificing = false, roleHidden = false, openRooms = [];
+let state = null, prevPhase = null, receivedAt = 0, guessRole = null, shooting = false, sacrificing = false, roleHidden = false, openRooms = [], leftRoom = false;
 const voice = new Voice(socket);
 
 // ---------- art ----------
@@ -72,8 +72,24 @@ document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
   m.classList.remove('hidden');
   m.querySelector('.modal-box').scrollTop = 0;
 });
-document.querySelectorAll('.modal').forEach(m => m.onclick = e => { if (e.target === m || e.target.closest('[data-close]')) closeModals(); });
-addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+document.querySelectorAll('.modal').forEach(m => {
+  if (m.id === 'leaveModal') return;
+  m.onclick = e => { if (e.target === m || e.target.closest('[data-close]')) closeModals(); };
+});
+addEventListener('keydown', e => {
+  const leaveOpen = $('leaveModal') && !$('leaveModal').classList.contains('hidden');
+  if (leaveOpen && e.key === 'Tab') {
+    const items = [$('leaveStay'), $('leaveGo')];
+    e.preventDefault();
+    let i = items.indexOf(document.activeElement);
+    i = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i + 1) % items.length;
+    items[i].focus();
+    return;
+  }
+  if (e.key !== 'Escape') return;
+  if (leaveOpen) { e.preventDefault(); closeLeaveConfirm(); return; }
+  closeModals();
+});
 
 fetch('/roles.json').then(r => r.json()).then(roles => {
   const card = r => `<div class="role-mini t-${r.team}"><span class="ic">${r.icon}</span><div><b>${esc(r.name)}</b>${esc(r.desc)}
@@ -91,8 +107,21 @@ socket.on('rooms', ({ rooms, online }) => {
         <button class="btn-gold btn-sm" data-join="${esc(r.code)}">KATIL</button></div>`).join('')
     : '<div class="empty">Şu an açık masa yok. “Hemen Oyna” ile ilk masayı sen kur!</div>';
 });
-socket.on('err', msg => { $('homeError').textContent = msg; });
+let toastTimer = null;
+function showToast(msg) {
+  const el = $('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), 4200);
+}
+socket.on('err', msg => {
+  if ($('room').classList.contains('hidden')) $('homeError').textContent = msg;
+  else showToast(msg);
+});
 socket.on('joined', ({ code, token }) => {
+  leftRoom = false;
   localStorage.setItem(SAVE_KEY, JSON.stringify({ code, token }));
   history.replaceState(null, '', '?oda=' + code);
   voice.startMic(); // no-op if already on; needed after a page reload
@@ -102,17 +131,48 @@ socket.on('connect', () => {
   if (saved) socket.emit('resume', saved);
 });
 socket.on('resumeFailed', () => { localStorage.removeItem(SAVE_KEY); showHome(); });
-socket.on('state', s => { state = s; receivedAt = Date.now(); render(); prevPhase = s.phase; });
+socket.on('state', s => {
+  if (leftRoom) return;
+  state = s; receivedAt = Date.now(); render(); prevPhase = s.phase;
+  if (!gameActive()) closeLeaveConfirm();
+});
 
-$('leave').onclick = () => {
-  if (state?.phase !== 'lobby' && state?.phase !== 'over' && !confirm('Oyundan çıkmak istediğine emin misin?')) return;
+function gameActive() {
+  return !!state && state.phase !== 'lobby' && state.phase !== 'over';
+}
+function hideLeaveConfirm(restoreFocus) {
+  const modal = $('leaveModal');
+  if (!modal || modal.classList.contains('hidden')) return;
+  modal.classList.add('hidden');
+  if (restoreFocus) $('leave')?.focus();
+}
+function closeLeaveConfirm() { hideLeaveConfirm(true); }
+function openLeaveConfirm() {
+  const modal = $('leaveModal');
+  modal.classList.remove('hidden');
+  const stay = $('leaveStay');
+  stay.focus();
+  requestAnimationFrame(() => stay.focus());
+}
+function performLeave() {
+  leftRoom = true;
+  hideLeaveConfirm(false);
   socket.emit('leave');
   localStorage.removeItem(SAVE_KEY);
   history.replaceState(null, '', location.pathname);
   state = prevPhase = null;
   voice.closeAll();
   showHome();
-};
+}
+$('leave').onclick = () => { if (gameActive()) openLeaveConfirm(); else performLeave(); };
+$('leaveStay').onclick = () => closeLeaveConfirm();
+$('leaveGo').onclick = () => performLeave();
+$('leaveModal').onclick = e => { if (e.target === $('leaveModal')) closeLeaveConfirm(); };
+addEventListener('beforeunload', e => {
+  if (!gameActive()) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
 function showHome() {
   $('home').classList.remove('hidden'); $('room').classList.add('hidden'); $('topnav').classList.remove('hidden');
   document.documentElement.dataset.phase = 'night'; FX.mode('night'); SFX.mode('night'); SFX.duck(false);
