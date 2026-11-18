@@ -435,7 +435,7 @@ class Room {
     this.chosen = {};
     const first = this.g.night === 1;
     this.set('night', first ? SECS.firstNight : SECS.night, () => this.endNight(),
-      first ? 'Şehir uyuyor… Mafya gözlerini açsın ve birbirini tanısın.' : 'Gece oldu. Şehir uyuyor… Yeteneği olanlar seçimini yapsın.');
+      first ? 'Masumlar uyuyor… Mafya gözlerini açsın ve birbirini tanısın.' : 'Gece oldu. Masumlar uyuyor… Yeteneği olanlar seçimini yapsın.');
   }
 
   endNight() {
@@ -458,15 +458,15 @@ class Room {
       if (yes > G.alive(this.g).length / 2) {
         const c = G.deadCounts(this.g);
         this.deadReveal = c;
-        this.say(`Dışarıda: ${c.city} şehir, ${c.mafia} mafya.`);
+        this.say(`Dışarıda: ${c.city} masum, ${c.mafia} mafya.`);
       } else this.say('Çoğunluk istemedi, dışarıdakiler gizli kaldı.');
       this.startSpeeches(false);
-    }, 'Dışarıdakilerin kaç tanesinin şehir, kaç tanesinin mafya olduğunu öğrenmek ister misiniz?');
+    }, 'Dışarıdakilerin kaç tanesinin masum, kaç tanesinin mafya olduğunu öğrenmek ister misiniz?');
   }
 
   end(w) {
     this.winner = w;
-    this.set('over', 0, null, w === 'city' ? 'Şehir kazandı! 🎉 Tüm mafya yakalandı.' : 'Mafya kazandı! 🩸 Şehir düştü.');
+    this.set('over', 0, null, w === 'city' ? 'Masumlar kazandı! 🎉 Tüm mafya yakalandı.' : 'Mafya kazandı! 🩸 Masumlar düştü.');
   }
 
   // ---------- player commands ----------

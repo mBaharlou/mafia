@@ -182,8 +182,8 @@ function showHome() {
 const PHASES = {
   lobby: ['Bekleme salonu', 'Masa doluyor'], starting: ['Hazırlan', 'Oyun başlıyor'], roles: ['Roller', 'Rolüne bak, kimseye söyleme'],
   speech: ['Gündüz', 'Konuşma turu'], defense: ['Savunma', 'Son sözler'], vote: ['Oylama', 'Kim çıksın?'], revote: ['Son oylama', 'Karar anı'],
-  poll: ['Soru', 'Dışarıdakiler'], revenge: ['İntikam', 'Terörist son hamlesini yapıyor'], morning: ['Sabah', 'Şehir uyanıyor'], announce: ['Duyuru', ''], coin: ['Yazı tura', 'Şans karar verecek'],
-  night: ['Gece', 'Şehir uyuyor'], over: ['Oyun bitti', ''],
+  poll: ['Soru', 'Dışarıdakiler'], revenge: ['İntikam', 'Terörist son hamlesini yapıyor'], morning: ['Sabah', 'Masumlar uyanıyor'], announce: ['Duyuru', ''], coin: ['Yazı tura', 'Şans karar verecek'],
+  night: ['Gece', 'Masumlar uyuyor'], over: ['Oyun bitti', ''],
 };
 const DARK = ['lobby', 'starting', 'roles', 'night', 'over'];
 const nameOf = id => state.players.find(p => p.id === id)?.name || '?';
@@ -439,7 +439,7 @@ function renderRole(s) {
   card.className = `glass role-card deco t-${r.team}` + (roleHidden ? ' blur' : '');
   card.innerHTML = `
     <div class="body"><div class="head"><span class="icon">${r.icon}</span><div>
-      <div class="team">${r.team === 'mafia' ? 'MAFYA' : 'ŞEHİR'}</div><div class="rname">${esc(r.name)}</div></div></div>
+      <div class="team">${r.team === 'mafia' ? 'MAFYA' : 'MASUM'}</div><div class="rname">${esc(r.name)}</div></div></div>
       <p>${esc(r.desc)}</p>${s.me.hasGun ? '<p><b>🔫 Elinde bir silah var!</b> Konuşma sıran gelince kullanabilirsin.</p>' : ''}</div>
     <button class="btn-link" id="toggleRole">${roleHidden ? '👁️ Rolümü göster' : '🙈 Rolümü gizle'}</button>`;
   $('toggleRole').onclick = () => { roleHidden = !roleHidden; renderRole(state); };
@@ -494,7 +494,7 @@ function renderAction(s) {
         : '<p class="big">💣 Terörist son hamlesini yapıyor…</p><p class="soft">Yanında kimi götüreceğini seçiyor.</p>';
       break;
     case 'poll':
-      html = '<p class="big">❓ Dışarıdakiler</p><p class="soft">Çıkanların kaçı şehir, kaçı mafya öğrenmek ister misin? (Kim olduğu söylenmez.)</p>';
+      html = '<p class="big">❓ Dışarıdakiler</p><p class="soft">Çıkanların kaçı masum, kaçı mafya öğrenmek ister misin? (Kim olduğu söylenmez.)</p>';
       if (alive) html += `<div class="btns"><button class="${s.poll.mine === true ? 'btn-gold' : 'btn-ghost'}" id="pollYes">EVET</button><button class="${s.poll.mine === false ? 'btn-gold' : 'btn-ghost'}" id="pollNo">HAYIR</button></div>`;
       break;
     case 'night': {
@@ -516,7 +516,7 @@ function renderAction(s) {
       break;
     }
     case 'over':
-      html = `<p class="winner-banner" style="color:${s.winner === 'city' ? 'var(--gold-2)' : '#FF4D5A'}">${s.winner === 'city' ? '🎉 Şehir kazandı!' : '🩸 Mafya kazandı!'}</p>
+      html = `<p class="winner-banner" style="color:${s.winner === 'city' ? 'var(--gold-2)' : '#FF4D5A'}">${s.winner === 'city' ? '🎉 Masumlar kazandı!' : '🩸 Mafya kazandı!'}</p>
         <p class="soft" style="text-align:center">Herkesin rolü masada görünüyor.</p>
         <button class="btn-play" id="restart">TEKRAR OYNA</button>`;
       break;
@@ -525,7 +525,7 @@ function renderAction(s) {
   if (s.canFedai) html += sacrificing
     ? `<div class="callout"><b>🧨 Kimi yanında götürüyorsun?</b><p class="soft">Sen ve seçtiğin kişi oyundan çıkarsınız, sonra hemen gece olur.</p>${targetButtons(s.players.filter(p => p.alive && p.id !== s.myId).map(p => p.id), null, true).replaceAll('data-t=', 'data-f=')}<div class="btns"><button class="btn-ghost btn-sm" id="noFedai">VAZGEÇ</button></div></div>`
     : '<div class="btns"><button class="btn-danger" id="fedai">🧨 KENDİNİ FEDA ET</button></div>';
-  if (s.deadReveal) html += `<p class="soft" style="margin-top:10px">Dışarıda: <b class="c-city">${s.deadReveal.city} şehir</b>, <b class="c-mafia">${s.deadReveal.mafia} mafya</b>.</p>`;
+  if (s.deadReveal) html += `<p class="soft" style="margin-top:10px">Dışarıda: <b class="c-city">${s.deadReveal.city} masum</b>, <b class="c-mafia">${s.deadReveal.mafia} mafya</b>.</p>`;
   $('action').innerHTML = deadNote + html;
   wireAction(s);
 }
@@ -604,19 +604,19 @@ function cinematic(s) {
   if (s.phase === prevPhase) return;
   if (s.phase === 'roles') return revealRole(s);
   if (!prevPhase) return; // just (re)connected: no fanfare
-  if (s.phase === 'night') { cine(`GECE ${s.night}`, s.night === 1 ? 'Mafya birbirini tanıyor' : 'Şehir uyuyor'); SFX.play.night(); }
-  else if (s.phase === 'morning') { cine('SABAH', 'Şehir uyanıyor', 'gold'); SFX.play.morning(); }
+  if (s.phase === 'night') { cine(`GECE ${s.night}`, s.night === 1 ? 'Mafya birbirini tanıyor' : 'Masumlar uyuyor'); SFX.play.night(); }
+  else if (s.phase === 'morning') { cine('SABAH', 'Masumlar uyanıyor', 'gold'); SFX.play.morning(); }
   else if (s.phase === 'vote') { cine('OYLAMA', 'Kim oyundan çıksın?', 'red'); SFX.play.vote(); }
   else if (s.phase === 'speech' && prevPhase === 'roles') { cine('GÜN 1', 'Tanışma turu', 'gold'); SFX.play.morning(); }
   else if (s.phase === 'over') {
-    cine(s.winner === 'city' ? 'ŞEHİR KAZANDI' : 'MAFYA KAZANDI', 'Oyun bitti', s.winner === 'city' ? 'gold' : 'red');
+    cine(s.winner === 'city' ? 'MASUMLAR KAZANDI' : 'MAFYA KAZANDI', 'Oyun bitti', s.winner === 'city' ? 'gold' : 'red');
     s.me?.team === s.winner ? SFX.play.win() : SFX.play.lose();
   }
 }
 function revealRole(s) {
   const r = s.roles[s.me.role];
   $('revealFront').className = `face front t-${r.team}`;
-  $('revealFront').innerHTML = `<div class="big-icon">${r.icon}</div><div class="team">${r.team === 'mafia' ? 'MAFYA' : 'ŞEHİR'}</div><h2>${esc(r.name)}</h2><p>${esc(r.desc)}</p>`;
+  $('revealFront').innerHTML = `<div class="big-icon">${r.icon}</div><div class="team">${r.team === 'mafia' ? 'MAFYA' : 'MASUM'}</div><h2>${esc(r.name)}</h2><p>${esc(r.desc)}</p>`;
   $('flip').classList.remove('on');
   $('reveal').classList.remove('hidden');
   setTimeout(() => { $('flip').classList.add('on'); SFX.play.reveal(); }, 700);
