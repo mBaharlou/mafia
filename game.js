@@ -2,7 +2,7 @@
 
 const ROLES = {
   baba:       { team: 'mafia', name: 'Baba',           icon: '🎩', desc: 'Her gece kimin öleceğini sen seçersin. Bir kez Keskin Nişancı\'nın kurşunundan kurtulursun. Gözcü seni iyi görür.' },
-  matador:    { team: 'mafia', name: 'Matador',        icon: '🎭', desc: 'Her gece şehirden birinin yeteneğini o gece için kapatırsın. Aynı kişiyi üst üste iki gece seçemezsin.' },
+  matador:    { team: 'mafia', name: 'Matador',        icon: '🎭', desc: 'Her gece masumlardan birinin yeteneğini o gece için kapatırsın. Aynı kişiyi üst üste iki gece seçemezsin.' },
   kotudoktor: { team: 'mafia', name: 'Kötü Doktor',    icon: '💉', desc: 'Her gece bir mafyayı (kendin dahil) Keskin Nişancı\'ya karşı korursun.' },
   doktor:     { team: 'city',  name: 'Doktor',         icon: '🩺', desc: 'Her gece birini mafyadan korursun. Kendini sadece bir kez koruyabilirsin. Aynı kişiyi en fazla iki gece üst üste korursun.' },
   nisanci:    { team: 'city',  name: 'Keskin Nişancı', icon: '🎯', desc: 'Gece bir kişiyi vurabilirsin (gecede en fazla 1). Mafyayı vurursan çıkar; iyi birini vurursan sen çıkarsın. Mafya seni bir kez öldüremez (kalkan).' },
@@ -14,7 +14,7 @@ const ROLES = {
   mafya:      { team: 'mafia', name: 'Mafya',          icon: '🕶️', desc: 'Özel yeteneğin yok. Mafya takımındasın: gece arkadaşlarınla konuş, gündüz kimseye belli etme.' },
   pehlivan:   { team: 'city',  name: 'Pehlivan',       icon: '💪', desc: 'İki canın var: mafya seni iki kez öldürmeye çalışsa da ölmezsin, üçüncüde ölürsün.' },
   fedai:      { team: 'city',  name: 'Fedai',          icon: '🧨', desc: 'Gündüz istediğin an (bir kez) kendini feda edersin: oyundan çıkarsın ama birini de yanında götürürsün. Sonra hemen gece olur.' },
-  vatandas:   { team: 'city',  name: 'Vatandaş',       icon: '🙂', desc: 'Özel yeteneğin yok. Dinle, konuş, doğru kişiye oy ver: şehir seninle kazanır.' },
+  vatandas:   { team: 'city',  name: 'Vatandaş',       icon: '🙂', desc: 'Özel yeteneğin yok. Dinle, konuş, doğru kişiye oy ver: masumlar seninle kazanır.' },
 };
 
 const NINE = ['baba', 'matador', 'kotudoktor', 'doktor', 'nisanci', 'buyucu', 'gozcu', 'susturucu', 'silahci'];

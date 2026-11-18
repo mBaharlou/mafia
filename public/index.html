@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>MAFYA · Şehir Uyurken</title>
+<title>MAFYA · Masumlar Uyurken</title>
 <meta name="theme-color" content="#07090D">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +26,7 @@
     <div class="deco-line"><i></i><b>◆</b><i></i></div>
     <div class="logo-kicker">BİR SESLİ GİZEM OYUNU</div>
     <h1 class="logo">MAF<span>Y</span>A</h1>
-    <div class="logo-sub">Şehir uyurken kimseye güvenme.</div>
+    <div class="logo-sub">Masumlar uyurken kimseye güvenme.</div>
     <button class="btn-play splash-enter" id="enter">▶ OYUNA GİR</button>
     <div class="splash-hint">🎧 Kulaklık önerilir · 🎤 Sesli oyun</div>
     <div class="deco-line"><i></i><b>◆</b><i></i></div>
@@ -62,7 +62,7 @@
     <div class="logo-wrap">
       <div class="logo-kicker">SESLİ · ONLİNE · ÜCRETSİZ</div>
       <h1 class="logo">MAF<span>Y</span>A</h1>
-      <div class="logo-sub">Şehir uyurken kimseye güvenme.</div>
+      <div class="logo-sub">Masumlar uyurken kimseye güvenme.</div>
     </div>
 
     <section class="glass card deco">
@@ -75,9 +75,9 @@
     <section class="glass card deco">
       <div class="card-head">Yeni masa kur</div>
       <div class="modes">
-        <button class="mode go" data-size="9"><b>9</b><span>OYUNCU</span><em>3 mafya · 6 şehir</em></button>
-        <button class="mode go" data-size="12"><b>12</b><span>OYUNCU</span><em>4 mafya · 8 şehir</em></button>
-        <button class="mode go" data-size="16"><b>16</b><span>OYUNCU</span><em>5 mafya · 11 şehir</em></button>
+        <button class="mode go" data-size="9"><b>9</b><span>OYUNCU</span><em>3 mafya · 6 masum</em></button>
+        <button class="mode go" data-size="12"><b>12</b><span>OYUNCU</span><em>4 mafya · 8 masum</em></button>
+        <button class="mode go" data-size="16"><b>16</b><span>OYUNCU</span><em>5 mafya · 11 masum</em></button>
       </div>
     </section>
 
@@ -111,11 +111,11 @@
   <div class="modal-box glass deco">
     <button class="modal-x" data-close aria-label="Kapat">✕</button>
     <h2 id="howTitle">Nasıl oynanır?</h2>
-    <p class="lead">Mafya bir yalan ve tahmin oyunudur. Şehrin içine saklanmış mafyayı bulmaya çalışırsınız; mafya ise yakalanmadan şehri ele geçirmeye çalışır.</p>
+    <p class="lead">Mafya bir yalan ve tahmin oyunudur. Masumların arasına saklanmış mafyayı bulmaya çalışırsınız; mafya ise yakalanmadan masumları alt etmeye çalışır.</p>
 
     <div class="steps">
       <div><b>1</b><p><strong>Masaya otur.</strong> 9, 12 ya da 16 kişi. Masa dolunca oyun kendiliğinden başlar.</p></div>
-      <div><b>2</b><p><strong>Rolüne bak.</strong> Her 3 kişiden biri <em class="c-mafia">Mafya</em>, gerisi <em class="c-city">Şehir</em>. Rolünü sadece sen görürsün.</p></div>
+      <div><b>2</b><p><strong>Rolüne bak.</strong> Her 3 kişiden biri <em class="c-mafia">Mafya</em>, gerisi <em class="c-city">Masum</em>. Rolünü sadece sen görürsün.</p></div>
       <div><b>3</b><p><strong>Gündüz konuş ve oy ver,</strong> gece rolünü kullan. Biri kazanana kadar devam eder.</p></div>
     </div>
 
@@ -127,8 +127,8 @@
 
     <h3 class="how-h">🎯 Kim kazanır?</h3>
     <ul class="how-list">
-      <li><strong class="c-city">Şehir</strong>: tüm mafya oyundan çıkınca kazanır.</li>
-      <li><strong class="c-mafia">Mafya</strong>: gece olurken mafya sayısı şehir sayısına eşit ya da fazlaysa kazanır.</li>
+      <li><strong class="c-city">Masum</strong>: tüm mafya oyundan çıkınca kazanır.</li>
+      <li><strong class="c-mafia">Mafya</strong>: gece olurken mafya sayısı masum sayısına eşit ya da fazlaysa kazanır.</li>
     </ul>
 
     <h3 class="how-h">☀️ Gündüz: konuşma</h3>
@@ -152,13 +152,13 @@
     <ul class="how-list">
       <li><strong>İlk gece</strong> sadece mafya uyanır ve birbirini tanır. Kimse ölmez.</li>
       <li>Sonraki gecelerde 45 saniye boyunca herkes rolünü kullanır: mafya kurbanını seçer, Doktor korur, Gözcü sorar…</li>
-      <li>Mafya gece sadece kendi arasında konuşabilir ve yazışabilir. Şehir hiçbir şey duymaz.</li>
+      <li>Mafya gece sadece kendi arasında konuşabilir ve yazışabilir. Masumlar hiçbir şey duymaz.</li>
     </ul>
 
     <h3 class="how-h">🌅 Sabah</h3>
     <ul class="how-list">
       <li>Anlatıcı gece kimin çıktığını söyler (rolünü değil).</li>
-      <li>İsterseniz oylayarak dışarıdakilerin kaçının şehir, kaçının mafya olduğunu öğrenebilirsiniz (kim olduğunu değil).</li>
+      <li>İsterseniz oylayarak dışarıdakilerin kaçının masum, kaçının mafya olduğunu öğrenebilirsiniz (kim olduğunu değil).</li>
     </ul>
 
     <h3 class="how-h">💡 İpuçları</h3>
@@ -179,7 +179,7 @@
     <p class="lead">Her rolün kartında hangi masalarda olduğu yazar. Rolünü kimseye söyleme!</p>
     <h3 class="how-h c-mafia">🩸 Mafya takımı</h3>
     <div class="role-grid" id="roleGridMafia"></div>
-    <h3 class="how-h c-city">🏙️ Şehir takımı</h3>
+    <h3 class="how-h c-city">😇 Masum takımı</h3>
     <div class="role-grid" id="roleGridCity"></div>
   </div>
 </div>
