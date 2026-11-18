@@ -2,7 +2,7 @@
 <html lang="tr" data-phase="night">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>MAFYA · Şehir Uyurken</title>
 <meta name="theme-color" content="#07090D">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -208,11 +208,13 @@
   </header>
 
   <div class="room-body">
-    <section class="stage" id="stage">
-      <div class="stage-light"></div>
-      <div class="stage-narrator" id="stageNarrator"></div>
-      <div class="table"><div class="felt"><div class="props" id="props"></div><p class="subtitle" id="narrator"></p></div></div>
-    </section>
+    <div class="stage-wrap">
+      <section class="stage" id="stage">
+        <div class="stage-light"></div>
+        <div class="stage-narrator" id="stageNarrator"></div>
+        <div class="table"><div class="felt"><div class="props" id="props"></div><p class="subtitle" id="narrator"></p></div></div>
+      </section>
+    </div>
 
     <aside class="side">
       <section class="glass role-card hidden" id="roleCard"></section>
