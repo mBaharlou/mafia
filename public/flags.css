@@ -1,0 +1,38 @@
+/* Flag skin layer. System still owns size, position, SEN, speaking glow, and the dead treatment. */
+.scene .flag {
+  --c1: #121827; --c2: #121827; --tx: #ECE2CE; --sc1: #F2B544; --sc2: #F2B544; --stx: #1A1206;
+  --glow: rgba(242,181,68,.9); --dc1: #2B2E35; --dc2: #2B2E35; --dtx: #C4C0B7;
+  --ybd: #F2B544; --ytx: #F2B544; --tabbg: #F2B544; --tabtx: #1A1206;
+  --rod1: #f7d58a; --rod2: #b9852b; --pole1: #e9c06a; --pole2: #8a6424; --pattern: none; --edgecol: transparent;
+}
+.scene .flag .pole { position: absolute; left: 50%; top: 100%; width: 2px; margin-left: -1px; background: linear-gradient(var(--pole1), var(--pole2)); height: var(--pl, 0px); }
+.scene .flag .rod { height: 4px; border-radius: 3px; background: linear-gradient(var(--rod1), var(--rod2)); position: relative; width: calc(100% + 10px); }
+.scene .flag .knob { position: absolute; top: 50%; width: 8px; height: 8px; margin-top: -4px; background: radial-gradient(circle at 35% 35%, var(--rod1), var(--rod2)); border-radius: 50%; }
+.scene .flag .knob img { width: 100%; height: 100%; display: block; }
+.scene .flag .knob.l { left: -4px; } .scene .flag .knob.r { right: -4px; }
+.scene .flag .cloth {
+  position: relative; display: flex; align-items: center; gap: 4px; padding: var(--pad, 4px 9px 9px);
+  background: var(--pattern), linear-gradient(180deg, var(--c1), var(--c2)); color: var(--tx);
+  font-weight: 700; letter-spacing: .01em; white-space: nowrap; border-top: 3px solid var(--acc, #F2B544);
+}
+.scene .flag .nm { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.scene .flag[data-edge="vnotch"] .cloth { clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%); }
+.scene .flag[data-edge="swallowtail"] .cloth { clip-path: polygon(0 0, 100% 0, 100% 100%, 75% calc(100% - 7px), 50% 100%, 25% calc(100% - 7px), 0 100%); }
+.scene .flag[data-edge="straight"] .cloth, .scene .flag[data-edge="fringe"] .cloth { box-shadow: inset 0 -2px 0 var(--edgecol); }
+.scene .flag .fringe { display: none; width: 100%; height: 5px; background: repeating-linear-gradient(90deg, var(--rod1) 0 2px, transparent 2px 4px); }
+.scene .flag[data-edge="fringe"] .fringe { display: block; }
+.scene .flag .tab { display: none; font-weight: 800; font-size: .72em; letter-spacing: .08em; background: var(--tabbg); color: var(--tabtx); padding: 1px 4px; border-radius: 3px; }
+.scene .flag .snd { display: none; width: 12px; height: 10px; flex: 0 0 auto; }
+.scene .flag .snd rect { fill: currentColor; }
+.scene .flag.you .cloth { box-shadow: inset 0 0 0 1.5px var(--ybd); color: var(--ytx); }
+.scene .flag.you .tab { display: inline-block; }
+.scene .flag.speaking .cloth { background: linear-gradient(180deg, var(--sc1), var(--sc2)); color: var(--stx); border-top-color: #fff3c9; }
+.scene .flag.speaking { filter: drop-shadow(0 0 8px var(--glow)); }
+.scene .flag.speaking .snd { display: inline-block; }
+.scene .flag.speaking .tab { background: var(--stx); color: var(--sc1); }
+.scene .flag.dead .cloth {
+  background: linear-gradient(var(--dc1), var(--dc2)); color: var(--dtx); border-top-color: #555a63; box-shadow: none;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 78% calc(100% - 3px), 62% 100%, 50% calc(100% - 7px), 30% 100%, 0 calc(100% - 2px));
+}
+.scene .flag.dead .nm { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.scene .flag.dead .rod, .scene .flag.dead .pole, .scene .flag.dead .knob, .scene .flag.dead .fringe { filter: grayscale(1) brightness(.6); }

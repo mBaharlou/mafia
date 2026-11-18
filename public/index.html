@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="flags.css">
 </head>
 <body>
 <div class="bg" aria-hidden="true">
@@ -211,6 +212,18 @@
 
 <!-- ============ GAME ROOM ============ -->
 <main id="room" class="screen hidden">
+  <div id="scene" class="scene" hidden>
+    <div class="scene-stage" id="sceneStage">
+      <div class="scene-bg" id="sceneBgNight"></div>
+      <div class="scene-bg scene-bg-day" id="sceneBgDay"></div>
+      <div class="scene-tint" id="sceneTint"></div>
+      <div class="scene-world" id="sceneWorld"></div>
+      <div class="scene-fx" id="sceneFx"></div>
+      <div class="scene-vig" id="sceneVig" aria-hidden="true"></div>
+      <div class="scene-red" id="sceneRed" aria-hidden="true"></div>
+    </div>
+  </div>
+  <p id="sceneNarr" class="scene-narr" hidden aria-live="polite"></p>
   <header class="hud">
     <div class="hud-left">
       <span class="chip">MASA <b id="roomCode"></b></span>
@@ -250,7 +263,7 @@
         <form class="chat-form" id="mafiaForm"><input id="mafiaInput" maxlength="200" placeholder="Sadece mafya görür…"><button class="btn-danger btn-sm">GÖNDER</button></form>
       </section>
       <section class="glass hidden" id="logPanel"><h3>🔒 Sana özel</h3><div class="feed" id="logFeed"></div></section>
-      <section class="glass"><h3>📜 Olaylar</h3><div class="feed" id="historyFeed"></div></section>
+      <section class="glass" id="historyPanel"><h3>📜 Olaylar</h3><div class="feed" id="historyFeed"></div></section>
     </aside>
   </div>
 </main>
@@ -285,6 +298,8 @@
 <script src="fx.js"></script>
 <script src="sound.js"></script>
 <script src="voice.js"></script>
+<script src="flags.js"></script>
+<script src="scene.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
