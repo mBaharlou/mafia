@@ -159,6 +159,14 @@ function loadCharacters(file = CHARACTER_FILE) {
 
 const CHARACTERS = loadCharacters();
 
+// Active scenes come from the manifest. Parked scenes (sahne) stay out of the pool.
+const SCENE_MANIFEST = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'scene', 'scene-manifest.json'), 'utf8'));
+const SCENE_IDS = Object.keys(SCENE_MANIFEST.scenes).filter(id => SCENE_MANIFEST.scenes[id].status === 'active');
+if (!SCENE_IDS.length) throw new Error('scene-manifest: no active scenes');
+function pickSceneId() {
+  return SCENE_IDS[crypto.randomInt(SCENE_IDS.length)];
+}
+
 // { id } or { error: 'missing' | 'type' | 'oversize' | 'unknown' }.
 // The same id may be used by more than one player (16 seats, 8 characters).
 function parseCharacterId(v) {
@@ -336,6 +344,7 @@ class Room {
   reset() {
     clearTimeout(this.timer);
     this.phase = 'lobby';
+    this.sceneId = null;
     this.g = null;
     this.history = [];
     this.logs = {};
@@ -382,6 +391,7 @@ class Room {
   }
 
   start() {
+    this.sceneId = pickSceneId();
     this.g = G.createGame(G.shuffle(this.players));
     this.mafiaCount = this.g.players.filter(p => p.team === 'mafia').length;
     this.set('roles', SECS.roles, () => this.startSpeeches(true), 'Rolüne bak ve kimseye söyleme! 🤫');
@@ -624,7 +634,7 @@ class Room {
     // Dead mafia see only the public board. Living mafia, from night 1 on, see teammates, the kill and the chat.
     const mafiaEyes = !!(me && me.alive && me.team === 'mafia' && g.night >= 1);
     const v = {
-      code: this.code, size: this.size, phase: this.phase, myId: p.id,
+      code: this.code, size: this.size, phase: this.phase, sceneId: this.sceneId, myId: p.id,
       left: this.deadline ? Math.max(0, this.deadline - Date.now()) : null,
       total: this.duration,
       narrator: this.narrator, history: this.history.slice(-30), logs: this.logs[p.id] || [],
@@ -908,4 +918,4 @@ function resetForTests() {
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) server.listen(PORT, () => console.log(`Mafya: http://localhost:${PORT}`));
-module.exports = { server, io, rooms, SECS, LIMITS, resetForTests, clientIpFrom, parseCharacterId, CHARACTERS };
+module.exports = { server, io, rooms, SECS, LIMITS, resetForTests, clientIpFrom, parseCharacterId, CHARACTERS, SCENE_IDS, pickSceneId };

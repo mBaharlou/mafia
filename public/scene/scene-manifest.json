@@ -1,0 +1,1220 @@
+{
+ "version": "1.0.0-final-design",
+ "canvas": {
+  "player": [
+   768,
+   1024
+  ],
+  "player_small": [
+   384,
+   512
+  ],
+  "ground_line": 0.96,
+  "kahin_ground_line": 0.97,
+  "coords": "normalised 0..1 of the canvas, origin top-left"
+ },
+ "players": {
+  "vinil": {
+   "name": "Vinil",
+   "accent": "#7C4DFF",
+   "files": {
+    "idle": {
+     "full": "/scene/players/vinil-idle.webp",
+     "small": "/scene/players/vinil-idle-512h.webp"
+    },
+    "speaking": {
+     "full": "/scene/players/vinil-speaking.webp",
+     "small": "/scene/players/vinil-speaking-512h.webp"
+    },
+    "dead": {
+     "full": "/scene/players/vinil-dead.webp",
+     "small": "/scene/players/vinil-dead-512h.webp"
+    }
+   },
+   "anchors": {
+    "idle": {
+     "head_top": [
+      0.4785,
+      0.0996
+     ],
+     "bbox": [
+      0.1888,
+      0.0996,
+      0.7682,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "speaking": {
+     "head_top": [
+      0.4629,
+      0.0996
+     ],
+     "bbox": [
+      0.1549,
+      0.0996,
+      0.7708,
+      0.959
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "dead": {
+     "head_top": [
+      0.5247,
+      0.3066
+     ],
+     "bbox": [
+      0.2266,
+      0.3066,
+      0.8229,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    }
+   }
+  },
+  "pelus": {
+   "name": "Peluş",
+   "accent": "#1FA59C",
+   "files": {
+    "idle": {
+     "full": "/scene/players/pelus-idle.webp",
+     "small": "/scene/players/pelus-idle-512h.webp"
+    },
+    "speaking": {
+     "full": "/scene/players/pelus-speaking.webp",
+     "small": "/scene/players/pelus-speaking-512h.webp"
+    },
+    "dead": {
+     "full": "/scene/players/pelus-dead.webp",
+     "small": "/scene/players/pelus-dead-512h.webp"
+    }
+   },
+   "anchors": {
+    "idle": {
+     "head_top": [
+      0.4954,
+      0.0996
+     ],
+     "bbox": [
+      0.1536,
+      0.0996,
+      0.8372,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "speaking": {
+     "head_top": [
+      0.4427,
+      0.0996
+     ],
+     "bbox": [
+      0.0482,
+      0.0996,
+      0.8372,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "dead": {
+     "head_top": [
+      0.4701,
+      0.3584
+     ],
+     "bbox": [
+      0.1393,
+      0.3584,
+      0.8008,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    }
+   }
+  },
+  "goz": {
+   "name": "Göz",
+   "accent": "#F28C1E",
+   "files": {
+    "idle": {
+     "full": "/scene/players/goz-idle.webp",
+     "small": "/scene/players/goz-idle-512h.webp"
+    },
+    "speaking": {
+     "full": "/scene/players/goz-speaking.webp",
+     "small": "/scene/players/goz-speaking-512h.webp"
+    },
+    "dead": {
+     "full": "/scene/players/goz-dead.webp",
+     "small": "/scene/players/goz-dead-512h.webp"
+    }
+   },
+   "anchors": {
+    "idle": {
+     "head_top": [
+      0.5085,
+      0.1152
+     ],
+     "bbox": [
+      0.0482,
+      0.1152,
+      0.9688,
+      0.9609
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "speaking": {
+     "head_top": [
+      0.5501,
+      0.2256
+     ],
+     "bbox": [
+      0.1107,
+      0.2256,
+      0.9896,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "dead": {
+     "head_top": [
+      0.5137,
+      0.3691
+     ],
+     "bbox": [
+      0.1719,
+      0.3691,
+      0.8555,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    }
+   }
+  },
+  "rakun": {
+   "name": "Rakun",
+   "accent": "#3D63E0",
+   "files": {
+    "idle": {
+     "full": "/scene/players/rakun-idle.webp",
+     "small": "/scene/players/rakun-idle-512h.webp"
+    },
+    "speaking": {
+     "full": "/scene/players/rakun-speaking.webp",
+     "small": "/scene/players/rakun-speaking-512h.webp"
+    },
+    "dead": {
+     "full": "/scene/players/rakun-dead.webp",
+     "small": "/scene/players/rakun-dead-512h.webp"
+    }
+   },
+   "anchors": {
+    "idle": {
+     "head_top": [
+      0.5358,
+      0.0996
+     ],
+     "bbox": [
+      0.1836,
+      0.0996,
+      0.888,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "speaking": {
+     "head_top": [
+      0.4909,
+      0.0996
+     ],
+     "bbox": [
+      0.0885,
+      0.0996,
+      0.8932,
+      0.9609
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "dead": {
+     "head_top": [
+      0.5202,
+      0.3574
+     ],
+     "bbox": [
+      0.1549,
+      0.3574,
+      0.8854,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    }
+   }
+  },
+  "fitil": {
+   "name": "Fitil",
+   "accent": "#C2185B",
+   "files": {
+    "idle": {
+     "full": "/scene/players/fitil-idle.webp",
+     "small": "/scene/players/fitil-idle-512h.webp"
+    },
+    "speaking": {
+     "full": "/scene/players/fitil-speaking.webp",
+     "small": "/scene/players/fitil-speaking-512h.webp"
+    },
+    "dead": {
+     "full": "/scene/players/fitil-dead.webp",
+     "small": "/scene/players/fitil-dead-512h.webp"
+    }
+   },
+   "anchors": {
+    "idle": {
+     "head_top": [
+      0.5046,
+      0.0996
+     ],
+     "bbox": [
+      0.207,
+      0.0996,
+      0.8021,
+      0.959
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "speaking": {
+     "head_top": [
+      0.4883,
+      0.0996
+     ],
+     "bbox": [
+      0.1758,
+      0.0996,
+      0.8008,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "dead": {
+     "head_top": [
+      0.513,
+      0.3574
+     ],
+     "bbox": [
+      0.1992,
+      0.3574,
+      0.8268,
+      0.959
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    }
+   }
+  },
+  "murekkep": {
+   "name": "Mürekkep",
+   "accent": "#B06CF0",
+   "files": {
+    "idle": {
+     "full": "/scene/players/murekkep-idle.webp",
+     "small": "/scene/players/murekkep-idle-512h.webp"
+    },
+    "speaking": {
+     "full": "/scene/players/murekkep-speaking.webp",
+     "small": "/scene/players/murekkep-speaking-512h.webp"
+    },
+    "dead": {
+     "full": "/scene/players/murekkep-dead.webp",
+     "small": "/scene/players/murekkep-dead-512h.webp"
+    }
+   },
+   "anchors": {
+    "idle": {
+     "head_top": [
+      0.5039,
+      0.0996
+     ],
+     "bbox": [
+      0.2031,
+      0.0996,
+      0.8047,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "speaking": {
+     "head_top": [
+      0.4837,
+      0.0996
+     ],
+     "bbox": [
+      0.1576,
+      0.0996,
+      0.8099,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "dead": {
+     "head_top": [
+      0.4974,
+      0.3584
+     ],
+     "bbox": [
+      0.168,
+      0.3584,
+      0.8268,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    }
+   }
+  },
+  "penguen": {
+   "name": "Penguen",
+   "accent": "#1E8C55",
+   "files": {
+    "idle": {
+     "full": "/scene/players/penguen-idle.webp",
+     "small": "/scene/players/penguen-idle-512h.webp"
+    },
+    "speaking": {
+     "full": "/scene/players/penguen-speaking.webp",
+     "small": "/scene/players/penguen-speaking-512h.webp"
+    },
+    "dead": {
+     "full": "/scene/players/penguen-dead.webp",
+     "small": "/scene/players/penguen-dead-512h.webp"
+    }
+   },
+   "anchors": {
+    "idle": {
+     "head_top": [
+      0.5,
+      0.0996
+     ],
+     "bbox": [
+      0.0755,
+      0.0996,
+      0.9245,
+      0.9609
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "speaking": {
+     "head_top": [
+      0.4785,
+      0.0996
+     ],
+     "bbox": [
+      0.0508,
+      0.0996,
+      0.9062,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "dead": {
+     "head_top": [
+      0.5163,
+      0.3916
+     ],
+     "bbox": [
+      0.1693,
+      0.3916,
+      0.8633,
+      0.959
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    }
+   }
+  },
+  "teneke": {
+   "name": "Teneke",
+   "accent": "#E0442E",
+   "files": {
+    "idle": {
+     "full": "/scene/players/teneke-idle.webp",
+     "small": "/scene/players/teneke-idle-512h.webp"
+    },
+    "speaking": {
+     "full": "/scene/players/teneke-speaking.webp",
+     "small": "/scene/players/teneke-speaking-512h.webp"
+    },
+    "dead": {
+     "full": "/scene/players/teneke-dead.webp",
+     "small": "/scene/players/teneke-dead-512h.webp"
+    }
+   },
+   "anchors": {
+    "idle": {
+     "head_top": [
+      0.4831,
+      0.0996
+     ],
+     "bbox": [
+      0.1029,
+      0.0996,
+      0.8633,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "speaking": {
+     "head_top": [
+      0.4544,
+      0.1006
+     ],
+     "bbox": [
+      0.0391,
+      0.1006,
+      0.8698,
+      0.9609
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    },
+    "dead": {
+     "head_top": [
+      0.4987,
+      0.3066
+     ],
+     "bbox": [
+      0.1693,
+      0.3066,
+      0.8281,
+      0.96
+     ],
+     "feet": [
+      0.5,
+      0.96
+     ]
+    }
+   }
+  }
+ },
+ "kahin": {
+  "name": "Kâhin",
+  "files": {
+   "idle": {
+    "full": "/scene/kahin/kahin-idle.webp",
+    "small": "/scene/kahin/kahin-idle-512h.webp"
+   },
+   "narrating": {
+    "full": "/scene/kahin/kahin-narrating.webp",
+    "small": "/scene/kahin/kahin-narrating-512h.webp"
+   },
+   "night": {
+    "full": "/scene/kahin/kahin-night.webp",
+    "small": "/scene/kahin/kahin-night-512h.webp"
+   },
+   "day": {
+    "full": "/scene/kahin/kahin-day.webp",
+    "small": "/scene/kahin/kahin-day-512h.webp"
+   },
+   "death": {
+    "full": "/scene/kahin/kahin-death.webp",
+    "small": "/scene/kahin/kahin-death-512h.webp"
+   }
+  },
+  "anchors": {
+   "idle": {
+    "canvas": [
+     768,
+     1024
+    ],
+    "canvas_small": [
+     384,
+     512
+    ],
+    "bbox": [
+     0.2409,
+     0.0703,
+     0.7448,
+     0.9697
+    ],
+    "float_base": [
+     0.5,
+     0.9697
+    ],
+    "float_base_px": [
+     384,
+     993
+    ]
+   },
+   "narrating": {
+    "canvas": [
+     768,
+     1024
+    ],
+    "canvas_small": [
+     384,
+     512
+    ],
+    "bbox": [
+     0.2096,
+     0.0664,
+     0.7695,
+     0.9648
+    ],
+    "float_base": [
+     0.5,
+     0.9697
+    ],
+    "float_base_px": [
+     384,
+     993
+    ]
+   },
+   "night": {
+    "canvas": [
+     768,
+     1152
+    ],
+    "canvas_small": [
+     384,
+     576
+    ],
+    "bbox": [
+     0.1914,
+     0.072,
+     0.8151,
+     0.9731
+    ],
+    "float_base": [
+     0.5,
+     0.9731
+    ],
+    "float_base_px": [
+     384,
+     1121
+    ]
+   },
+   "day": {
+    "canvas": [
+     768,
+     1024
+    ],
+    "canvas_small": [
+     384,
+     512
+    ],
+    "bbox": [
+     0.1654,
+     0.0908,
+     0.8776,
+     0.9229
+    ],
+    "float_base": [
+     0.5,
+     0.9697
+    ],
+    "float_base_px": [
+     384,
+     993
+    ]
+   },
+   "death": {
+    "canvas": [
+     768,
+     1024
+    ],
+    "canvas_small": [
+     384,
+     512
+    ],
+    "bbox": [
+     0.224,
+     0.0674,
+     0.7565,
+     0.9688
+    ],
+    "float_base": [
+     0.5,
+     0.9697
+    ],
+    "float_base_px": [
+     384,
+     993
+    ]
+   }
+  },
+  "canvas_note": "All poses share one body scale. 'night' (lantern raised) uses a taller 768x1152 canvas: the extra 128 px are ABOVE the idle box. Align every pose by float_base_px (same pixel distance from the canvas bottom: 31 px at full size), never by the top edge."
+ },
+ "scenes": {
+  "meydan": {
+   "id": "meydan",
+   "name": "Ay Işığı Meydanı",
+   "status": "active",
+   "bg": {
+    "desktop": {
+     "night": "/scene/bg/meydan-desktop.webp",
+     "day": "/scene/bg/meydan-day-desktop.webp"
+    },
+    "phone": {
+     "night": "/scene/bg/meydan-phone.webp",
+     "day": "/scene/bg/meydan-day-phone.webp"
+    }
+   },
+   "desktop": {
+    "god": [
+     0.5,
+     0.615,
+     0.36
+    ],
+    "ring": [
+     0.5,
+     0.655,
+     0.305,
+     0.235
+    ],
+    "player_h": [
+     0.15,
+     0.205
+    ]
+   },
+   "phone": {
+    "god": [
+     0.503,
+     0.49,
+     0.19
+    ],
+    "ring": [
+     0.5,
+     0.505,
+     0.4,
+     0.285
+    ],
+    "player_h": [
+     0.078,
+     0.098
+    ]
+   },
+   "day_night": {
+    "mode": "crossfade",
+    "duration_ms": 1400,
+    "mid_tint": "rgba(30,45,120,0.18)"
+   },
+   "flags": {
+    "default_skin": "standart",
+    "pole_color_override": null,
+    "note": "Flag cloth is opaque, so text contrast does not depend on the background; no per-scene flag colours are needed."
+   },
+   "palette": {
+    "ambient_night": "#1B2A55",
+    "ambient_day": "#E9D9B0",
+    "accent": "#F2B544"
+   }
+  },
+  "cember": {
+   "id": "cember",
+   "name": "Mum Çemberi",
+   "status": "active",
+   "bg": {
+    "desktop": {
+     "night": "/scene/bg/cember-desktop.webp",
+     "day": "/scene/bg/cember-day-desktop.webp"
+    },
+    "phone": {
+     "night": "/scene/bg/cember-phone.webp",
+     "day": "/scene/bg/cember-day-phone.webp"
+    }
+   },
+   "desktop": {
+    "god": [
+     0.498,
+     0.585,
+     0.36
+    ],
+    "ring": [
+     0.5,
+     0.64,
+     0.275,
+     0.22
+    ],
+    "player_h": [
+     0.15,
+     0.205
+    ]
+   },
+   "phone": {
+    "god": [
+     0.503,
+     0.465,
+     0.19
+    ],
+    "ring": [
+     0.5,
+     0.49,
+     0.4,
+     0.27
+    ],
+    "player_h": [
+     0.078,
+     0.098
+    ]
+   },
+   "day_night": {
+    "mode": "crossfade",
+    "duration_ms": 1400,
+    "mid_tint": "rgba(30,45,120,0.18)"
+   },
+   "flags": {
+    "default_skin": "standart",
+    "pole_color_override": null,
+    "note": "Flag cloth is opaque, so text contrast does not depend on the background; no per-scene flag colours are needed."
+   },
+   "palette": {
+    "ambient_night": "#2A1A10",
+    "ambient_day": "#DCE6C8",
+    "accent": "#F2B544"
+   }
+  }
+ },
+ "layout_rules": {
+  "gap_frac": {
+   "desktop": 0.15,
+   "phone": 0.1
+  },
+  "scale_by_n": {
+   "<=8": [
+    1.2,
+    0.86,
+    0.92
+   ],
+   "<=12": [
+    1.08,
+    0.94,
+    1
+   ],
+   ">12": [
+    1,
+    1,
+    1
+   ]
+  },
+  "scale_by_n_fields": [
+   "player_h multiplier",
+   "ring rx multiplier",
+   "ring ry multiplier"
+  ]
+ },
+ "ids_note": "Character ids are final and identical to the MAFIA-4 pack folders: vinil, pelus, goz, rakun, fitil, murekkep, penguen, teneke.",
+ "scene_selection": {
+  "pool": "all scenes with status \"active\" (now: meydan, cember)",
+  "who_picks": "server, once, at game start (uniform random over the pool; optional weights field later)",
+  "broadcast": "the server sends scene_id in the game-start / room-state payload; every client renders that id, so all players see the same scene; reconnecting clients get it from the room state",
+  "preload": "during the lobby, clients preload BOTH active scenes (night+day for their layout, about 0.6 MB webp per scene on phone) plus all character sprites, so the reveal has no pop-in",
+  "fallback": "unknown scene_id → meydan",
+  "adding_a_scene": "add an entry under scenes with id, bg (night+day x desktop+phone), desktop/phone layout params, status. Paid or seasonal scenes later add tier:\"paid\" and an entitlement key; the pool filter then decides who sees it (room host entitlement)."
+ },
+ "cosmetic_stack": {
+  "order_bottom_to_top": [
+   "base",
+   "costume",
+   "hat",
+   "effect",
+   "flag"
+  ],
+  "rule": "Cosmetic only, never gameplay. No cosmetic may change hitboxes, sizes, name readability, role hints or state signals (speaking, dead, you).",
+  "slots": {
+   "base": "the character sprite (idle/speaking/dead)",
+   "costume": "future overlay sprite, same 768x1024 canvas and ground line",
+   "hat": "future overlay, anchored at head_top per state",
+   "effect": "future particle/aura layer, behind or above the sprite, never covering the name flag",
+   "flag": "the name flag above the head; every player always has one (default skin standart)"
+  }
+ },
+ "flag_skins": {
+  "schema": {
+   "id": "string, unique, lowercase ascii",
+   "name": "display name (TR)",
+   "tier": "free | paid",
+   "price": "null for now (pricing is a product decision)",
+   "label": "store badge text",
+   "cloth": {
+    "fill": "[top,bottom] hex gradient stops (solid = same twice)",
+    "pattern": "none | velvet | stars | pinstripe (CSS/SVG overlay, never contains text)",
+    "edge": "vnotch | swallowtail | straight | fringe",
+    "edge_color": "hex or null",
+    "accent_stripe": "\"character\" (player accent) | hex | null",
+    "image": "optional cloth texture (webp, 9-slice) instead of fill; text still live",
+    "nine_slice": "[top,right,bottom,left] px insets when image is used"
+   },
+   "rod": {
+    "fill": "[top,bottom] hex",
+    "knob": "none | ball | star (assets/flags/knobs/*.svg)"
+   },
+   "pole": {
+    "fill": "[top,bottom] hex"
+   },
+   "ornament": "null | svg name in assets/flags/ornaments/ (sits on top of the rod, max 1.35em tall, max 2.2em wide)",
+   "text": {
+    "color": "hex, rendered as LIVE TEXT (the player name is never baked into art)",
+    "weight": "700 fixed"
+   },
+   "states": {
+    "speaking": "{cloth:[a,b], text, glow}",
+    "dead": "{cloth:[a,b], text} (strikethrough, torn edge, 7deg tilt and grey parts are applied by the system, not the skin)",
+    "you": "{border, text, tab_bg, tab_text}"
+   },
+   "contrast": "computed WCAG ratio, worst case vs every cloth stop, per state",
+   "passes_aa": "must be true (>= 4.5:1 for every state) or the skin is rejected by the build check"
+  },
+  "locked_by_system": [
+   "font family/size",
+   "name length/ellipsis rule",
+   "position and collision pass",
+   "speaking sound icon + glow",
+   "dead strikethrough, torn edge, tilt, greyed parts",
+   "SEN / ★ tab for the local player"
+  ],
+  "parts_order": [
+   "pole",
+   "rod (+knobs)",
+   "cloth (+pattern, edge, fringe)",
+   "ornament",
+   "live text (tab, sound icon, name)"
+  ],
+  "skins": {
+   "standart": {
+    "id": "standart",
+    "name": "Standart",
+    "tier": "free",
+    "price": null,
+    "label": null,
+    "cloth": {
+     "fill": [
+      "#121827",
+      "#121827"
+     ],
+     "pattern": "none",
+     "edge": "vnotch",
+     "edge_color": null,
+     "accent_stripe": "character",
+     "image": null,
+     "nine_slice": null
+    },
+    "rod": {
+     "fill": [
+      "#F7D58A",
+      "#B9852B"
+     ],
+     "knob": "ball"
+    },
+    "pole": {
+     "fill": [
+      "#E9C06A",
+      "#8A6424"
+     ]
+    },
+    "ornament": null,
+    "text": {
+     "color": "#ECE2CE",
+     "weight": 700
+    },
+    "states": {
+     "speaking": {
+      "cloth": [
+       "#F2B544",
+       "#F2B544"
+      ],
+      "text": "#1A1206",
+      "glow": "rgba(242,181,68,.9)"
+     },
+     "dead": {
+      "cloth": [
+       "#2B2E35",
+       "#2B2E35"
+      ],
+      "text": "#C4C0B7"
+     },
+     "you": {
+      "border": "#F2B544",
+      "text": "#F2B544",
+      "tab_bg": "#F2B544",
+      "tab_text": "#1A1206"
+     }
+    },
+    "contrast": {
+     "normal": 13.78,
+     "speaking": 10.12,
+     "dead": 7.49,
+     "you": 9.67,
+     "you_tab": 10.12
+    },
+    "passes_aa": true
+   },
+   "kraliyet": {
+    "id": "kraliyet",
+    "name": "Kraliyet Kadifesi",
+    "tier": "paid",
+    "price": null,
+    "label": "GELECEK · Ücretli",
+    "cloth": {
+     "fill": [
+      "#8E1430",
+      "#4A0614"
+     ],
+     "pattern": "velvet",
+     "edge": "fringe",
+     "edge_color": "#E7B24A",
+     "accent_stripe": "#E7B24A",
+     "image": null,
+     "nine_slice": null
+    },
+    "rod": {
+     "fill": [
+      "#FFE9A8",
+      "#B9852B"
+     ],
+     "knob": "ball"
+    },
+    "pole": {
+     "fill": [
+      "#FFE29A",
+      "#8A6424"
+     ]
+    },
+    "ornament": "crown",
+    "text": {
+     "color": "#FBEFD5",
+     "weight": 700
+    },
+    "states": {
+     "speaking": {
+      "cloth": [
+       "#F7CF6A",
+       "#E0A53A"
+      ],
+      "text": "#3A0610",
+      "glow": "rgba(247,207,106,.9)"
+     },
+     "dead": {
+      "cloth": [
+       "#2B2E35",
+       "#2B2E35"
+      ],
+      "text": "#C4C0B7"
+     },
+     "you": {
+      "border": "#FFE29A",
+      "text": "#FFE29A",
+      "tab_bg": "#FFE29A",
+      "tab_text": "#3A0610"
+     }
+    },
+    "contrast": {
+     "normal": 8.03,
+     "speaking": 7.92,
+     "dead": 7.49,
+     "you": 7.24,
+     "you_tab": 13.68
+    },
+    "passes_aa": true
+   },
+   "yildiz": {
+    "id": "yildiz",
+    "name": "Yıldız Tozu",
+    "tier": "paid",
+    "price": null,
+    "label": "GELECEK · Ücretli",
+    "cloth": {
+     "fill": [
+      "#2A2F7A",
+      "#12143F"
+     ],
+     "pattern": "stars",
+     "edge": "swallowtail",
+     "edge_color": null,
+     "accent_stripe": "#B9C3FF",
+     "image": null,
+     "nine_slice": null
+    },
+    "rod": {
+     "fill": [
+      "#FFFFFF",
+      "#8E96B5"
+     ],
+     "knob": "star"
+    },
+    "pole": {
+     "fill": [
+      "#E6E9F5",
+      "#6E7698"
+     ]
+    },
+    "ornament": "crescent",
+    "text": {
+     "color": "#F3EEFF",
+     "weight": 700
+    },
+    "states": {
+     "speaking": {
+      "cloth": [
+       "#C9D0FF",
+       "#9BA8FF"
+      ],
+      "text": "#0D0F2E",
+      "glow": "rgba(150,165,255,.95)"
+     },
+     "dead": {
+      "cloth": [
+       "#2B2E35",
+       "#2B2E35"
+      ],
+      "text": "#C4C0B7"
+     },
+     "you": {
+      "border": "#C9D0FF",
+      "text": "#C9D0FF",
+      "tab_bg": "#C9D0FF",
+      "tab_text": "#0D0F2E"
+     }
+    },
+    "contrast": {
+     "normal": 10.35,
+     "speaking": 8.39,
+     "dead": 7.49,
+     "you": 7.81,
+     "you_tab": 12.4
+    },
+    "passes_aa": true
+   },
+   "gangster": {
+    "id": "gangster",
+    "name": "Gangster",
+    "tier": "paid",
+    "price": null,
+    "label": "GELECEK · Ücretli",
+    "cloth": {
+     "fill": [
+      "#1C1C21",
+      "#0B0B0D"
+     ],
+     "pattern": "pinstripe",
+     "edge": "straight",
+     "edge_color": "#F2B544",
+     "accent_stripe": "#F2B544",
+     "image": null,
+     "nine_slice": null
+    },
+    "rod": {
+     "fill": [
+      "#3A3A42",
+      "#101014"
+     ],
+     "knob": "ball"
+    },
+    "pole": {
+     "fill": [
+      "#3A3A42",
+      "#101014"
+     ]
+    },
+    "ornament": "fedora",
+    "text": {
+     "color": "#F2B544",
+     "weight": 700
+    },
+    "states": {
+     "speaking": {
+      "cloth": [
+       "#F2B544",
+       "#D9962A"
+      ],
+      "text": "#140E04",
+      "glow": "rgba(242,181,68,.9)"
+     },
+     "dead": {
+      "cloth": [
+       "#2B2E35",
+       "#2B2E35"
+      ],
+      "text": "#C4C0B7"
+     },
+     "you": {
+      "border": "#ECE2CE",
+      "text": "#ECE2CE",
+      "tab_bg": "#ECE2CE",
+      "tab_text": "#0B0B0D"
+     }
+    },
+    "contrast": {
+     "normal": 9.27,
+     "speaking": 7.63,
+     "dead": 7.49,
+     "you": 13.2,
+     "you_tab": 15.3
+    },
+    "passes_aa": true
+   }
+  }
+ }
+}

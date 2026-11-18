@@ -551,3 +551,62 @@ body.kb-open { padding-bottom: max(42vh, 240px); }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .cine.show { opacity: 1; } }
+
+/* ---------- full-screen scene (MAFIA-7) ---------- */
+.scene { position: fixed; inset: 0; z-index: 1; isolation: isolate; pointer-events: none; background: #05070b; }
+.scene-stage { position: absolute; inset: 0; overflow: hidden; transform-origin: 50% 55%; }
+.scene-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.scene-bg-day { opacity: 0; }
+.scene-tint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; }
+.scene-world { position: absolute; inset: 0; z-index: 2; }
+.scene-fx { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.scene-vig { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
+.scene-red { position: absolute; inset: 0; z-index: 6; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at 50% 50%, rgba(120,0,20,0) 35%, rgba(150,10,30,.55) 100%); }
+.scene .ent { position: absolute; width: 0; height: 0; }
+.scene .shadow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.55), rgba(0,0,0,0)); transform: translate(-50%, -50%); }
+.scene .glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(242,181,68,.55), rgba(242,181,68,0)); transform: translate(-50%, -50%); mix-blend-mode: screen; opacity: 0; pointer-events: none; }
+.scene .god-glow { background: radial-gradient(closest-side, rgba(120,140,255,.45), rgba(120,140,255,0)); opacity: .55; }
+.scene .spr { position: absolute; transform-origin: 50% 96%; }
+.scene .god-spr { transform-origin: 50% 97%; overflow: visible; }
+.scene .spr img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.scene .god-spr img { inset: auto; left: 0; width: 100%; bottom: auto; }
+.scene .cosmetic { position: absolute; pointer-events: none; }
+.scene .puff { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(230,230,240,.85), rgba(230,230,240,0)); }
+.scene .flag { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; transform-origin: 50% 100%; font-family: Inter, sans-serif; font-weight: 700; letter-spacing: .01em; color: #ECE2CE; -webkit-font-smoothing: antialiased; }
+.scene .flag .meta { font: 600 11px/1.2 Inter, sans-serif; color: #F3E3BF; text-shadow: 0 1px 2px #000; margin-bottom: 2px; max-width: 140px; text-align: center; }
+.scene .flag .meta:empty { display: none; }
+.scene-narr { position: fixed; z-index: 30; margin: 0; pointer-events: none; text-align: center; color: #ECE2CE; background: linear-gradient(rgba(8,10,20,.86), rgba(8,10,20,.78)); border: 1px solid rgba(242,181,68,.45); border-radius: 14px; padding: 8px 16px 10px; font: italic 700 18px/1.35 var(--f-title); }
+.scene-narr:empty { display: none; }
+body.scene-on { overflow: hidden; height: 100dvh; }
+body.scene-on .bg, body.scene-on #fx, body.scene-on .vignette, body.scene-on .grain { visibility: hidden; }
+body.scene-on #room { height: 100dvh; min-height: 0; overflow: hidden; background: transparent; }
+body.scene-on .hud { position: relative; z-index: 30; background: linear-gradient(180deg, rgba(5,7,11,.82), rgba(5,7,11,.28) 75%, rgba(5,7,11,0)); }
+body.scene-on .room-body { display: block; height: 0; min-height: 0; padding: 0; overflow: visible; }
+body.scene-on .stage-wrap { display: none; }
+body.scene-on .side { display: contents; position: static; max-height: none; overflow: visible; padding: 0; }
+body.scene-on #historyPanel, body.scene-on #logPanel, body.scene-on #mafiaPanel, body.scene-on #action, body.scene-on #roleCard { position: fixed; z-index: 30; pointer-events: auto; margin: 0; }
+@media (min-width: 801px) {
+  body.scene-on .scene-narr { top: 78px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 640px)); }
+  body.scene-on #historyPanel { left: 28px; bottom: 28px; width: 360px; max-height: 190px; overflow: auto; }
+  body.scene-on #historyPanel .feed { max-height: 120px; }
+  body.scene-on #logPanel { left: 28px; bottom: 228px; width: 360px; max-height: 140px; overflow: auto; }
+  body.scene-on #mafiaPanel { left: 28px; bottom: 228px; width: 360px; max-height: 210px; overflow: auto; }
+  body.scene-on #logPanel:not(.hidden) { bottom: 448px; }
+  body.scene-on #action { right: 28px; bottom: 28px; width: 260px; max-height: min(440px, 48vh); overflow: auto; }
+  body.scene-on #roleCard { right: 28px; top: 132px; width: 260px; max-height: 220px; overflow: auto; }
+}
+@media (max-width: 800px) {
+  body.scene-on .hud { max-height: none; padding: 6px 8px 4px; }
+  body.scene-on .phase-sub { display: none; }
+  body.scene-on .phase-title { font-size: 16px; }
+  body.scene-on .phase-title::before, body.scene-on .phase-title::after { content: none; }
+  body.scene-on .ring { width: 44px; height: 44px; }
+  body.scene-on .icon-btn, body.scene-on #leave, body.scene-on #action button, body.scene-on .targets button { min-width: 44px; min-height: 44px; }
+  body.scene-on .scene-narr { left: 10px; right: 10px; bottom: 168px; width: auto; max-height: 64px; overflow: auto; font-size: 14px; }
+  body.scene-on #action { left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: 150px; overflow: auto; }
+  body.scene-on #historyPanel { left: 8px; right: 8px; top: 62px; width: auto; max-height: 72px; overflow: auto; }
+  body.scene-on #historyPanel .feed { max-height: 36px; }
+  body.scene-on #roleCard { left: 8px; right: auto; top: 138px; width: min(200px, 54vw); max-height: 88px; overflow: auto; }
+  body.scene-on #mafiaPanel, body.scene-on #logPanel { left: 8px; right: 8px; top: auto; bottom: 168px; width: auto; max-height: 110px; overflow: auto; }
+  body.scene-on .flag .meta { font-size: 10px; max-width: 96px; }
+}

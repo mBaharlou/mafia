@@ -289,6 +289,9 @@ addEventListener('beforeunload', e => {
 function showHome() {
   $('home').classList.remove('hidden'); $('room').classList.add('hidden'); $('topnav').classList.remove('hidden');
   document.documentElement.dataset.phase = 'night'; FX.mode('night'); SFX.mode('night'); SFX.duck(false);
+  document.body.classList.remove('scene-on');
+  Scene.hide();
+  $('sceneNarr').hidden = true;
 }
 
 // ---------- game room ----------
@@ -320,6 +323,12 @@ function render() {
   if (sub$.textContent !== text) {
     if (prevPhase && /oyundan çıktı|vurdu|götürdü/.test(text)) SFX.play.death();
     sub$.textContent = text; sub$.classList.remove('pop'); void sub$.offsetWidth; sub$.classList.add('pop'); }
+  const sceneOn = Scene.wanted(s);
+  document.body.classList.toggle('scene-on', sceneOn);
+  $('sceneNarr').hidden = !sceneOn;
+  if (sceneOn) $('sceneNarr').textContent = text;
+  if (sceneOn) Scene.sync(s);
+  else Scene.hide();
   $('stage').classList.toggle('talking', ['morning', 'announce', 'coin', 'roles', 'starting', 'over'].includes(s.phase));
   renderSeats(s);
   renderRole(s);
@@ -373,6 +382,10 @@ function syncAvatarResolution() {
 
 function renderSeats(s) {
   const stage = $('stage');
+  if (Scene.wanted(s)) {
+    stage.querySelectorAll('.seat').forEach(e => e.remove());
+    return;
+  }
   stage.querySelectorAll('.seat').forEach(e => e.remove());
   const n = s.size;
   stage.dataset.size = n;
@@ -412,7 +425,7 @@ function renderSeats(s) {
 let layoutLock = false;
 function layoutTable() {
   const stage = $('stage');
-  if (!stage || layoutLock || $('room').classList.contains('hidden')) return;
+  if (!stage || layoutLock || $('room').classList.contains('hidden') || document.body.classList.contains('scene-on')) return;
   layoutLock = true;
   try {
     const seats = [...stage.querySelectorAll('.seat')];
@@ -575,7 +588,8 @@ addEventListener('resize', () => {
   if (document.body.classList.contains('kb-open')) return;
   layoutTable();
 });
-document.fonts?.ready.then(() => { if (state) layoutTable(); });
+document.fonts?.ready.then(() => { if (state) { layoutTable(); if (Scene.wanted(state)) Scene.sync(state); } });
+Scene.whenReady(() => { Scene.preloadLobby(); if (state) render(); });
 layoutPanels();
 
 let kbTimer = null;
