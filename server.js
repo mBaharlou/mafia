@@ -1,5 +1,7 @@
 const express = require('express');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 const { Server } = require('socket.io');
 const G = require('./game');
@@ -17,6 +19,7 @@ const LIMITS = {
   mafiaChatHistory: 100,
   chatMaxLen: 200,
   nameMaxRaw: 64,
+  characterIdMax: 32,
   emptyRoomMs: 60_000,
   idleLobbyMs: 2 * 60 * 60 * 1000,
   rates: {
@@ -35,6 +38,8 @@ const MSG = {
   conn: 'Bu ağdan çok fazla bağlantı var. Bazı sekmeleri kapatıp tekrar dene.',
   chat: 'Mesajın çok uzun. En fazla 200 karakter yazabilirsin.',
   name: 'Önce bir isim yaz.',
+  character: 'Bir karakter seç.',
+  characterUnknown: 'Bu karakter yok. Listeden birini seç.',
   noRoom: 'Bu kodla bir oda yok.',
   taken: 'Bu isim odada zaten var, başka bir isim seç.',
   full: 'Bu oda dolu ya da oyun başladı.',
@@ -129,6 +134,45 @@ function isPlainObject(v) {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
   const proto = Object.getPrototypeOf(v);
   return proto === Object.prototype || proto === null;
+}
+
+const CHARACTER_FILE = path.join(__dirname, 'public', 'characters', 'characters.json');
+
+function loadCharacters(file = CHARACTER_FILE) {
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (!data || data.version !== 1 || !Array.isArray(data.characters) || !data.characters.length) {
+    throw new Error('characters.json: expected version 1 and a non-empty characters array');
+  }
+  const byId = new Map();
+  for (const c of data.characters) {
+    if (!isPlainObject(c) || typeof c.id !== 'string' || !/^[a-z0-9]{1,32}$/.test(c.id)) throw new Error('characters.json: bad id');
+    if (byId.has(c.id)) throw new Error('characters.json: duplicate id ' + c.id);
+    if (typeof c.name !== 'string' || !c.name.trim()) throw new Error('characters.json: bad name for ' + c.id);
+    if (!isPlainObject(c.images) || !isPlainObject(c.anchors)) throw new Error('characters.json: bad images or anchors for ' + c.id);
+    if (!isPlainObject(c.placeholder) || typeof c.placeholder.initial !== 'string' || !c.placeholder.initial.trim()) {
+      throw new Error('characters.json: bad placeholder for ' + c.id);
+    }
+    byId.set(c.id, c);
+  }
+  return { version: data.version, list: data.characters, byId };
+}
+
+const CHARACTERS = loadCharacters();
+
+// { id } or { error: 'missing' | 'type' | 'oversize' | 'unknown' }.
+// The same id may be used by more than one player (16 seats, 8 characters).
+function parseCharacterId(v) {
+  if (v == null || v === '') return { error: 'missing' };
+  if (typeof v !== 'string') return { error: 'type' };
+  if (v.length > LIMITS.characterIdMax) return { error: 'oversize' };
+  const id = v.trim();
+  if (!id) return { error: 'missing' };
+  if (!CHARACTERS.byId.has(id)) return { error: 'unknown' };
+  return { id };
+}
+
+function characterMessage(error) {
+  return error === 'unknown' ? MSG.characterUnknown : MSG.character;
 }
 
 function normalizeCode(v) {
@@ -285,7 +329,7 @@ class Room {
     this.creatorSid = owner.sid || '';
     this.activityAt = Date.now();
     this.emptyAt = 0;
-    this.players = []; // {id, token, name, socketId, connected, nonce, ip, sid}
+    this.players = []; // {id, token, name, characterId, socketId, connected, nonce, ip, sid}
     this.reset();
   }
 
@@ -322,7 +366,8 @@ class Room {
   // ---------- lobby ----------
   join(name, meta = {}) {
     if (this.phase !== 'lobby' || this.players.length >= this.size) return null;
-    const p = { id: newId(), token: newId(), name, socketId: null, connected: true, nonce: 0, ip: meta.ip || '', sid: meta.sid || '' };
+    // Duplicate character picks are allowed: 16 seats, 8 characters. Player colour keeps the seats apart.
+    const p = { id: newId(), token: newId(), name, characterId: meta.characterId, socketId: null, connected: true, nonce: 0, ip: meta.ip || '', sid: meta.sid || '' };
     this.players.push(p);
     this.activityAt = Date.now();
     if (this.players.length === this.size) this.set('starting', SECS.starting, () => this.start(), 'Masa doldu! Oyun 10 saniye içinde başlıyor.');
@@ -586,7 +631,7 @@ class Room {
       players: (g ? g.players : this.players).map((x, i) => {
         const conn = this.players.find(y => y.id === x.id);
         return {
-          id: x.id, name: x.name, seat: g ? x.seat : i, alive: g ? x.alive : true,
+          id: x.id, name: x.name, characterId: x.characterId || conn?.characterId || null, seat: g ? x.seat : i, alive: g ? x.alive : true,
           connected: conn?.connected, nonce: conn?.nonce || 0,
           silenced: !!(g && x.silenced && x.alive),
           mate: !!(mafiaEyes && x.team === 'mafia'),
@@ -691,13 +736,16 @@ function onConnect(socket) {
     if (block('create', socket)) return;
     if (!isPlainObject(data)) return socket.emit('err', MSG.bad);
     const name = cleanName(data.name);
+    if (!name) return socket.emit('err', MSG.name);
     const size = data.size;
-    if (!name || typeof size !== 'number' || !Number.isInteger(size) || !SIZES.includes(size)) return socket.emit('err', MSG.bad);
+    if (typeof size !== 'number' || !Number.isInteger(size) || !SIZES.includes(size)) return socket.emit('err', MSG.bad);
+    const character = parseCharacterId(data.characterId);
+    if (character.error) return socket.emit('err', characterMessage(character.error));
     if (room) return socket.emit('err', MSG.inRoom);
     if (overCap(ip, sid, null)) return socket.emit('err', MSG.rooms);
     const r = new Room(size, { ip, sid });
     rooms.set(r.code, r);
-    const p = r.join(name, { ip, sid });
+    const p = r.join(name, { ip, sid, characterId: character.id });
     if (!p) { rooms.delete(r.code); return socket.emit('err', MSG.bad); }
     attach(r, p);
   }));
@@ -707,6 +755,8 @@ function onConnect(socket) {
     if (!isPlainObject(data)) return socket.emit('err', MSG.bad);
     const name = cleanName(data.name);
     if (!name) return socket.emit('err', MSG.name);
+    const character = parseCharacterId(data.characterId);
+    if (character.error) return socket.emit('err', characterMessage(character.error));
     if (room) return socket.emit('err', MSG.inRoom);
     const code = normalizeCode(data.code);
     if (!code) return socket.emit('err', MSG.bad);
@@ -714,11 +764,12 @@ function onConnect(socket) {
     if (!r) return socket.emit('err', MSG.noRoom);
     if (overCap(ip, sid, r)) return socket.emit('err', MSG.rooms);
     if (r.players.some(p => p.name.toLowerCase() === name.toLowerCase())) return socket.emit('err', MSG.taken);
-    const p = r.join(name, { ip, sid });
+    const p = r.join(name, { ip, sid, characterId: character.id });
     if (!p) return socket.emit('err', MSG.full);
     attach(r, p);
   }));
 
+  // Resume reattaches the same player row, so the character picked at join stays. A new characterId is ignored.
   socket.on('resume', guard(socket, 'resume', data => {
     if (block('resume', socket)) return;
     if (!isPlainObject(data)) return socket.emit('resumeFailed');
@@ -857,4 +908,4 @@ function resetForTests() {
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) server.listen(PORT, () => console.log(`Mafya: http://localhost:${PORT}`));
-module.exports = { server, io, rooms, SECS, LIMITS, resetForTests, clientIpFrom };
+module.exports = { server, io, rooms, SECS, LIMITS, resetForTests, clientIpFrom, parseCharacterId, CHARACTERS };

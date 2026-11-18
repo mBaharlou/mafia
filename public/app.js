@@ -38,23 +38,75 @@ addEventListener('pointermove', e => {
 });
 
 // ---------- main menu ----------
+const CHAR_KEY = 'mafya-character';
+let characters = [];
+const characterById = new Map();
 $('name').value = localStorage.getItem('mafya-name') || '';
 const params = new URLSearchParams(location.search);
 if (params.get('oda')) $('code').value = params.get('oda').toUpperCase();
 
-function myName() {
-  const n = $('name').value.trim();
-  if (!n) { $('homeError').textContent = 'Önce takma adını yaz 🙂'; $('name').focus(); return null; }
-  localStorage.setItem('mafya-name', n);
+function selectedCharacter() {
+  return document.querySelector('#charGrid input[name="character"]:checked')?.value || '';
+}
+function myPick() {
+  const name = $('name').value.trim();
+  const characterId = selectedCharacter();
+  if (!name) { $('homeError').textContent = 'Önce takma adını yaz 🙂'; $('name').focus(); return null; }
+  if (!characterId) { $('homeError').textContent = 'Bir karakter seç.'; document.querySelector('#charGrid input')?.focus(); return null; }
+  localStorage.setItem('mafya-name', name);
+  localStorage.setItem(CHAR_KEY, characterId);
   $('homeError').textContent = '';
-  return n;
+  return { name, characterId };
 }
 async function go(event, data) {
-  const name = myName();
-  if (!name) return;
+  const pick = myPick();
+  if (!pick) return;
   await voice.startMic(); // asks for mic permission inside the click
-  socket.emit(event, { ...data, name });
+  socket.emit(event, { ...data, ...pick });
 }
+$('charForm').onsubmit = e => e.preventDefault();
+$('charGrid').addEventListener('change', e => {
+  if (e.target?.name === 'character' && e.target.value) localStorage.setItem(CHAR_KEY, e.target.value);
+});
+
+function bindCharacterImage(img) {
+  const fail = () => {
+    const smaller = img.dataset.img128;
+    if (smaller && img.getAttribute('src') !== smaller) { img.src = smaller; return; }
+    img.parentElement?.classList.remove('has-img');
+    img.remove();
+  };
+  const show = () => { if (img.naturalWidth > 0) img.parentElement?.classList.add('has-img'); else fail(); };
+  img.addEventListener('load', show);
+  img.addEventListener('error', fail);
+  if (img.complete) show();
+}
+function renderCharGrid() {
+  const saved = localStorage.getItem(CHAR_KEY) || '';
+  const known = characters.some(c => c.id === saved);
+  $('charGrid').innerHTML = characters.map(c => {
+    const initial = String(c.placeholder?.initial || c.name || '?').trim().charAt(0).toLocaleUpperCase('tr');
+    const src = c.images?.['128'] || '';
+    return `<label class="char-tile">
+      <input type="radio" name="character" value="${esc(c.id)}" ${known && c.id === saved ? 'checked' : ''} aria-describedby="char-d-${esc(c.id)}">
+      <span class="char-art" aria-hidden="true"><span class="char-fallback">${esc(initial)}</span>${src ? `<img alt="" width="128" height="128" loading="lazy" decoding="async" src="${esc(src)}">` : ''}</span>
+      <span class="char-label">${esc(c.name)}</span>
+    </label>`;
+  }).join('');
+  $('charDesc').innerHTML = characters.map(c => `<span class="sr-only" id="char-d-${esc(c.id)}">${esc(c.description || '')}</span>`).join('');
+  $('charGrid').querySelectorAll('img').forEach(bindCharacterImage);
+  $('charStatus').textContent = 'Aynı karakteri başkası da seçebilir.';
+}
+fetch('/characters/characters.json').then(r => {
+  if (!r.ok) throw new Error(String(r.status));
+  return r.json();
+}).then(data => {
+  characters = Array.isArray(data.characters) ? data.characters : [];
+  characterById.clear();
+  for (const c of characters) if (c?.id) characterById.set(c.id, c);
+  renderCharGrid();
+  if (state) render();
+}).catch(() => { $('charStatus').textContent = 'Karakterler yüklenemedi. Sayfayı yenile.'; });
 $('quickPlay').onclick = () => {
   const best = [...openRooms].filter(r => r.count < r.size).sort((a, b) => b.count - a.count)[0];
   best ? go('join', { code: best.code }) : go('create', { size: 9 });
@@ -217,6 +269,34 @@ function render() {
   tick();
 }
 
+function characterOf(id) { return characterById.get(id) || null; }
+
+// 128 for a phone roster and small rings, 256 once the portrait is 64px or wider.
+function seatImagePx() {
+  if (window.innerWidth <= 680 || window.innerHeight <= 500) return 128;
+  const portrait = parseFloat(getComputedStyle($('stage')).getPropertyValue('--portrait')) || 58;
+  return portrait >= 64 ? 256 : 128;
+}
+function avatarHtml(p) {
+  const ch = characterOf(p.characterId);
+  const initial = String(ch?.placeholder?.initial || p.name || '?').trim().charAt(0).toLocaleUpperCase('tr') || '?';
+  const img128 = ch?.images?.['128'] || '';
+  const img256 = ch?.images?.['256'] || img128;
+  const px = seatImagePx();
+  const src = px === 256 ? img256 : img128;
+  const img = src
+    ? `<img class="avatar-img" alt="" width="${px}" height="${px}" loading="lazy" decoding="async" src="${esc(src)}" data-img128="${esc(img128)}" data-img256="${esc(img256)}">`
+    : '';
+  return `<div class="pic avatar" style="--tint:${ART.tint(p.id)}">${img}<span class="avatar-fallback" aria-hidden="true">${esc(initial)}</span></div>`;
+}
+function syncAvatarResolution() {
+  const key = String(seatImagePx());
+  document.querySelectorAll('#stage .avatar-img').forEach(img => {
+    const next = img.dataset['img' + key];
+    if (next && img.getAttribute('src') !== next) img.src = next;
+  });
+}
+
 function renderSeats(s) {
   const stage = $('stage');
   stage.querySelectorAll('.seat').forEach(e => e.remove());
@@ -226,13 +306,15 @@ function renderSeats(s) {
     // seats run clockwise around the table, leaving the top free for the narrator
     const el = document.createElement('div');
     const speaking = s.speaker?.id === p.id;
-    el.className = 'seat' + (p.id === s.myId ? ' me' : '') + (!p.alive ? ' dead' : '') + (p.mate ? ' mate' : '') + (speaking ? ' speaking' : '');
-    el.dataset.seat = String(p.seat);
     const role = p.role && s.roles[p.role];
     const votes = s.vote?.counts[p.id];
     const showRole = role && (s.phase === 'over' || p.id !== s.myId);
+    el.className = 'seat' + (p.id === s.myId ? ' me' : '') + (!p.alive ? ' dead' : '') + (p.mate ? ' mate' : '') + (speaking ? ' speaking' : '') + (showRole ? ' revealed' : '');
+    el.dataset.seat = String(p.seat);
+    if (p.characterId) el.dataset.character = p.characterId;
+    if (showRole) el.style.setProperty('--role', role.team === 'mafia' ? 'var(--mafia)' : 'var(--city)');
     el.innerHTML = `
-      <div class="portrait"><div class="pic">${ART.portrait(p.id)}</div>
+      <div class="portrait">${avatarHtml(p)}
         ${p.alive && p.silenced ? '<span class="badge">🤐</span>' : p.alive && !p.connected ? '<span class="badge" title="Bağlantı koptu">📵</span>' : ''}
         ${votes ? `<span class="badge votes">${votes}</span>` : ''}
         ${speaking ? '<span class="eq"><i></i><i></i><i></i><i></i></span>' : ''}
@@ -240,6 +322,7 @@ function renderSeats(s) {
       <div class="plate">${esc(p.name)}</div>
       ${showRole ? `<div class="tag" style="color:var(--${role.team === 'mafia' ? 'mafia' : 'city'})">${role.icon} ${esc(role.name)}</div>`
         : p.mate && p.id !== s.myId ? '<div class="tag" style="color:var(--mafia)">🩸 Mafya</div>' : ''}`;
+    el.querySelectorAll('.avatar-img').forEach(bindCharacterImage);
     stage.appendChild(el);
   });
   layoutTable();
@@ -389,6 +472,7 @@ function layoutTable() {
     }
     if (bad) useRoster();
   } finally {
+    syncAvatarResolution();
     layoutLock = false;
   }
 }
@@ -418,7 +502,7 @@ layoutPanels();
 let kbTimer = null;
 document.addEventListener('focusin', e => {
   const t = e.target;
-  if (!(t instanceof HTMLElement) || !t.matches('input, textarea, select')) return;
+  if (!(t instanceof HTMLElement) || !t.matches('textarea, select, input:not([type="radio"]):not([type="checkbox"])')) return;
   document.body.classList.add('kb-open');
   const block = t.closest('.card, .chat-form, .row, .mafia-panel, .action') || t;
   clearTimeout(kbTimer);
@@ -428,7 +512,7 @@ document.addEventListener('focusout', () => {
   clearTimeout(kbTimer);
   setTimeout(() => {
     const a = document.activeElement;
-    if (!a || !a.matches?.('input, textarea, select')) document.body.classList.remove('kb-open');
+    if (!a || !a.matches?.('textarea, select, input:not([type="radio"]):not([type="checkbox"])')) document.body.classList.remove('kb-open');
   }, 180);
 });
 

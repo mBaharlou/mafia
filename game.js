@@ -35,7 +35,7 @@ function createGame(players, rng = Math.random) {
   const roles = shuffle(SETUPS[players.length], rng);
   const mafiaCount = roles.filter(r => ROLES[r].team === 'mafia').length;
   return {
-    players: players.map((p, i) => ({ id: p.id, name: p.name, seat: i, role: roles[i], team: ROLES[roles[i]].team, alive: true, silenced: false, hasGun: false, armor: roles[i] === 'pehlivan' ? 2 : roles[i] === 'nisanci' ? 1 : 0 })),
+    players: players.map((p, i) => ({ id: p.id, name: p.name, characterId: p.characterId || null, seat: i, role: roles[i], team: ROLES[roles[i]].team, alive: true, silenced: false, hasGun: false, armor: roles[i] === 'pehlivan' ? 2 : roles[i] === 'nisanci' ? 1 : 0 })),
     night: 0,
     shieldUsed: false,
     shotsLeft: mafiaCount - 1,

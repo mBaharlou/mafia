@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "characters": [
+    {
+      "id": "vinil",
+      "name": "Vinil",
+      "description": "Cep boy bir vinil baba. Çizgili yelek, fötr şapka.",
+      "images": {
+        "512": "/characters/vinil-512.webp",
+        "256": "/characters/vinil-256.webp",
+        "128": "/characters/vinil-128.webp"
+      },
+      "anchors": {},
+      "placeholder": { "initial": "V" }
+    },
+    {
+      "id": "pelus",
+      "name": "Pelüş",
+      "description": "Peluş bir dedektif ayısı. Elinde pirinç bir büyüteç.",
+      "images": {
+        "512": "/characters/pelus-512.webp",
+        "256": "/characters/pelus-256.webp",
+        "128": "/characters/pelus-128.webp"
+      },
+      "anchors": {},
+      "placeholder": { "initial": "P" }
+    },
+    {
+      "id": "goz",
+      "name": "Göz",
+      "description": "Kocaman gözlü bir jelibon. Bakışı her şeyi ele verir.",
+      "images": {
+        "512": "/characters/goz-512.webp",
+        "256": "/characters/goz-256.webp",
+        "128": "/characters/goz-128.webp"
+      },
+      "anchors": {},
+      "placeholder": { "initial": "G" }
+    },
+    {
+      "id": "rakun",
+      "name": "Rakun",
+      "description": "Maskesi yüzünden olan bir haydut rakun.",
+      "images": {
+        "512": "/characters/rakun-512.webp",
+        "256": "/characters/rakun-256.webp",
+        "128": "/characters/rakun-128.webp"
+      },
+      "anchors": {},
+      "placeholder": { "initial": "R" }
+    },
+    {
+      "id": "fitil",
+      "name": "Fitil",
+      "description": "Kapüşonlu bir mum ruhu. Gözleri ve gülüşü alev alev.",
+      "images": {
+        "512": "/characters/fitil-512.webp",
+        "256": "/characters/fitil-256.webp",
+        "128": "/characters/fitil-128.webp"
+      },
+      "anchors": {},
+      "placeholder": { "initial": "F" }
+    },
+    {
+      "id": "murekkep",
+      "name": "Mürekkep",
+      "description": "Boynuzlu bir mürekkep cini. Karanlıkta bile iz bırakır.",
+      "images": {
+        "512": "/characters/murekkep-512.webp",
+        "256": "/characters/murekkep-256.webp",
+        "128": "/characters/murekkep-128.webp"
+      },
+      "anchors": {},
+      "placeholder": { "initial": "M" }
+    },
+    {
+      "id": "penguen",
+      "name": "Penguen Don",
+      "description": "Smokinle doğmuş yuvarlak bir penguen baba.",
+      "images": {
+        "512": "/characters/penguen-512.webp",
+        "256": "/characters/penguen-256.webp",
+        "128": "/characters/penguen-128.webp"
+      },
+      "anchors": {},
+      "placeholder": { "initial": "P" }
+    },
+    {
+      "id": "teneke",
+      "name": "Teneke",
+      "description": "Kurmalı teneke bir robot. Anahtarı durunca susar.",
+      "images": {
+        "512": "/characters/teneke-512.webp",
+        "256": "/characters/teneke-256.webp",
+        "128": "/characters/teneke-128.webp"
+      },
+      "anchors": {},
+      "placeholder": { "initial": "T" }
+    }
+  ]
+}

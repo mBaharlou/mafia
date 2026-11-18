@@ -3,7 +3,8 @@ process.env.TIME_SCALE = '0.01';
 const test = require('node:test');
 const assert = require('node:assert');
 const { io: connect } = require('socket.io-client');
-const { server } = require('./server');
+const { server, CHARACTERS } = require('./server');
+const characterIds = CHARACTERS.list.map(c => c.id);
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
@@ -38,13 +39,13 @@ function playGame(url, size) {
         if (s.phase === 'poll' && s.poll.mine === undefined) c.emit('poll', { yes: true });
         if (s.phase === 'night') for (const o of s.options) if (!o.chosen) c.emit('action', { type: o.type, target: pick(o.targets), role: o.roles && pick(o.roles) });
       });
-      if (code) c.emit('join', { name: 'Bot' + i, code });
+      if (code) c.emit('join', { name: 'Bot' + i, code, characterId: characterIds[i % characterIds.length] });
       return c;
     };
 
     const host = bot(0);
     host.once('joined', ({ code }) => { for (let i = 1; i < size; i++) bot(i, code); });
-    host.emit('create', { name: 'Bot0', size });
+    host.emit('create', { name: 'Bot0', size, characterId: characterIds[0] });
   });
 }
 

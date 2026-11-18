@@ -74,6 +74,8 @@ ART.narratorCopy = key => ART.narrator.replace(/(id="|url\(#)(n[A-Z]\w*)/g, `$1$
 const PORTRAIT_COLORS = [['#7B5EA7', '#3B2A5A'], ['#C2185B', '#5E0B2C'], ['#00897B', '#00403A'], ['#5D7FDB', '#253A73'], ['#E67E22', '#6B3A0E'], ['#6D8B3A', '#33421A'], ['#AD5A4A', '#4F2620'], ['#3F8FA6', '#1B4350'], ['#B0478F', '#521F42'], ['#8E6C3A', '#41311A']];
 function hashOf(s) { return [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7); }
 
+ART.tint = id => PORTRAIT_COLORS[hashOf(String(id)) % PORTRAIT_COLORS.length][1];
+
 ART.portrait = id => {
   const h = hashOf(id);
   const [c1, c2] = PORTRAIT_COLORS[h % PORTRAIT_COLORS.length];
