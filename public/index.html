@@ -59,25 +59,33 @@
 
 <main id="home" class="screen">
   <div class="home-left">
-    <div class="logo-wrap">
-      <div class="logo-kicker">SESLİ · ONLİNE · ÜCRETSİZ</div>
-      <h1 class="logo">MAF<span>Y</span>A</h1>
-      <div class="logo-sub">Masumlar uyurken kimseye güvenme.</div>
-    </div>
-
-    <section class="glass card deco" id="joinCard">
-      <label class="lbl" for="name">Takma adın</label>
+    <section class="join-card" id="joinCard">
+      <p class="char-kicker">MAFYA · Masaya otur</p>
+      <h2 class="char-title">Kim olacaksın?</h2>
+      <label class="char-lbl" for="name">Adın</label>
       <input id="name" maxlength="16" placeholder="Örneğin: Ayşe" autocomplete="nickname">
+      <div class="char-summary" id="charSummary" hidden>
+        <div class="char-summary-art">
+          <span class="char-fallback" id="charSummaryFallback" aria-hidden="true"></span>
+          <img id="charSummaryImg" alt="" width="256" height="256" decoding="async">
+        </div>
+        <div>
+          <div class="char-kicker">Seçili karakter</div>
+          <div class="char-summary-name" id="charSummaryName"></div>
+          <p class="char-summary-desc" id="charSummaryDesc"></p>
+        </div>
+      </div>
+      <div class="char-head-row">
+        <span class="char-lbl" id="charLegend">Karakterini seç</span>
+        <span class="char-dim" id="charCount">8 karakter</span>
+      </div>
       <form id="charForm">
-        <fieldset class="char-pick">
-          <legend class="lbl" id="charLegend">Karakterin</legend>
-          <div class="char-grid" id="charGrid"></div>
-          <div id="charDesc"></div>
-        </fieldset>
+        <div class="char-grid" id="charGrid" role="radiogroup" aria-labelledby="charLegend"></div>
+        <div id="charDesc"></div>
       </form>
-      <p class="hint" id="charStatus">Karakterler yükleniyor…</p>
-      <button id="quickPlay" class="btn-play"><span>▶</span> HEMEN OYNA</button>
-      <p class="hint">Boş bir masaya otomatik oturursun. Masa dolunca oyun başlar.</p>
+      <p class="char-shop" id="charStatus">Karakterler yükleniyor…</p>
+      <button id="quickPlay" class="char-join" disabled>MASAYA KATIL</button>
+      <p class="hint">Boş bir masaya oturursun. Masa dolunca oyun başlar.</p>
     </section>
 
     <section class="glass card deco">
@@ -101,10 +109,19 @@
     <p class="error" id="homeError" role="alert"></p>
   </div>
 
-  <div class="home-right" aria-hidden="true">
-    <div class="hero-spot"></div>
-    <div class="hero-narrator" id="heroNarrator"></div>
-    <div class="hero-quote">“Masaya hoş geldin. Kimin kim olduğunu<br>sadece <b>ben</b> bilirim…”</div>
+  <div class="home-right">
+    <div class="char-hero" id="charHero">
+      <div class="char-hero-top">
+        <p class="char-kicker">MAFYA · Masaya otur</p>
+        <h2 class="char-title">Kim olacaksın?</h2>
+      </div>
+      <img id="charHeroImg" alt="" width="512" height="512" decoding="async">
+      <span class="char-fallback char-hero-fallback" id="charHeroFallback" aria-hidden="true"></span>
+      <div class="char-hero-copy">
+        <div class="char-hero-name" id="charHeroName"></div>
+        <p class="char-hero-desc" id="charHeroDesc"></p>
+      </div>
+    </div>
   </div>
 
   <footer class="site-footer">

@@ -34,6 +34,7 @@ test('character id validation', () => {
     assert.equal(parseCharacterId(c.id).id, c.id);
     assert.equal(typeof c.anchors, 'object');
     assert.ok(c.images['128'] && c.images['256'] && c.images['512']);
+    assert.ok(c.states.speaking['128'] && c.states.dead['256'] && c.accent);
   }
   assert.equal(parseCharacterId(' fitil ').id, 'fitil');
 

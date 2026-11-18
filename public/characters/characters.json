@@ -1,101 +1,485 @@
 {
   "version": 1,
+  "canvas": {
+    "size": 1024,
+    "coords": "normalised 0..1, origin top-left; multiply by rendered size",
+    "exports": [
+      512,
+      256
+    ],
+    "avatar": 128
+  },
+  "states": {
+    "default": "Normal / idle (with starter fedora)",
+    "speaking": "Speaking turn",
+    "dead": "Eliminated (full colour; game greys it)",
+    "bare": "Hatless base for future cosmetic hats"
+  },
+  "layer_order": [
+    "seat_bg",
+    "base",
+    "costume",
+    "hat",
+    "effect",
+    "ui_ring"
+  ],
+  "reference_head_width": 0.4,
   "characters": [
     {
       "id": "vinil",
       "name": "Vinil",
-      "description": "Cep boy bir vinil baba. Çizgili yelek, fötr şapka.",
+      "description": "Cep boyu vinil oyuncak capo. Parlak, kendinden emin, biraz kibirli.",
+      "description_tr": "Cep boyu vinil oyuncak capo. Parlak, kendinden emin, biraz kibirli.",
+      "description_en": "Pocket-size vinyl-toy capo: glossy, smug, confident.",
+      "accent": "#7C4DFF",
       "images": {
-        "512": "/characters/vinil-512.webp",
+        "128": "/characters/vinil-128.webp",
         "256": "/characters/vinil-256.webp",
-        "128": "/characters/vinil-128.webp"
+        "512": "/characters/vinil-512.webp"
       },
-      "anchors": {},
-      "placeholder": { "initial": "V" }
+      "states": {
+        "default": {
+          "128": "/characters/vinil-128.webp",
+          "256": "/characters/vinil-256.webp",
+          "512": "/characters/vinil-512.webp"
+        },
+        "speaking": {
+          "128": "/characters/vinil-speaking-128.webp",
+          "256": "/characters/vinil-speaking-256.webp",
+          "512": "/characters/vinil-speaking-512.webp"
+        },
+        "dead": {
+          "128": "/characters/vinil-dead-128.webp",
+          "256": "/characters/vinil-dead-256.webp",
+          "512": "/characters/vinil-dead-512.webp"
+        }
+      },
+      "anchors": {
+        "head_top": [
+          0.5284,
+          0.1719
+        ],
+        "face_center": [
+          0.5284,
+          0.5222
+        ],
+        "eye_line": 0.45,
+        "body_center": [
+          0.5259,
+          0.7722
+        ],
+        "ground_line": 0.95,
+        "head_width": 0.4139,
+        "hat_scale": 1.0348
+      },
+      "avatar_crop": [
+        0.2157,
+        0.0168,
+        0.8411,
+        0.6421
+      ],
+      "placeholder": {
+        "initial": "V"
+      }
     },
     {
       "id": "pelus",
-      "name": "Pelüş",
-      "description": "Peluş bir dedektif ayısı. Elinde pirinç bir büyüteç.",
+      "name": "Peluş",
+      "description": "Pelüş dedektif ayı. Herkesten şüphelenir, ama çok kibarca.",
+      "description_tr": "Pelüş dedektif ayı. Herkesten şüphelenir, ama çok kibarca.",
+      "description_en": "Plush detective bear who politely suspects everyone.",
+      "accent": "#1FA59C",
       "images": {
-        "512": "/characters/pelus-512.webp",
+        "128": "/characters/pelus-128.webp",
         "256": "/characters/pelus-256.webp",
-        "128": "/characters/pelus-128.webp"
+        "512": "/characters/pelus-512.webp"
       },
-      "anchors": {},
-      "placeholder": { "initial": "P" }
+      "states": {
+        "default": {
+          "128": "/characters/pelus-128.webp",
+          "256": "/characters/pelus-256.webp",
+          "512": "/characters/pelus-512.webp"
+        },
+        "speaking": {
+          "128": "/characters/pelus-speaking-128.webp",
+          "256": "/characters/pelus-speaking-256.webp",
+          "512": "/characters/pelus-speaking-512.webp"
+        },
+        "dead": {
+          "128": "/characters/pelus-dead-128.webp",
+          "256": "/characters/pelus-dead-256.webp",
+          "512": "/characters/pelus-dead-512.webp"
+        }
+      },
+      "anchors": {
+        "head_top": [
+          0.4947,
+          0.2451
+        ],
+        "face_center": [
+          0.4947,
+          0.5288
+        ],
+        "eye_line": 0.45,
+        "body_center": [
+          0.4995,
+          0.7788
+        ],
+        "ground_line": 0.95,
+        "head_width": 0.4817,
+        "hat_scale": 1.2042
+      },
+      "avatar_crop": [
+        0.2106,
+        0.0968,
+        0.7789,
+        0.6651
+      ],
+      "placeholder": {
+        "initial": "P"
+      }
     },
     {
       "id": "goz",
       "name": "Göz",
-      "description": "Kocaman gözlü bir jelibon. Bakışı her şeyi ele verir.",
+      "description": "Dev gözlü jöle. Bütün oyunculuğu gözleriyle yapar.",
+      "description_tr": "Dev gözlü jöle. Bütün oyunculuğu gözleriyle yapar.",
+      "description_en": "Gummy blob whose giant eyes do all the acting.",
+      "accent": "#F28C1E",
       "images": {
-        "512": "/characters/goz-512.webp",
+        "128": "/characters/goz-128.webp",
         "256": "/characters/goz-256.webp",
-        "128": "/characters/goz-128.webp"
+        "512": "/characters/goz-512.webp"
       },
-      "anchors": {},
-      "placeholder": { "initial": "G" }
+      "states": {
+        "default": {
+          "128": "/characters/goz-128.webp",
+          "256": "/characters/goz-256.webp",
+          "512": "/characters/goz-512.webp"
+        },
+        "speaking": {
+          "128": "/characters/goz-speaking-128.webp",
+          "256": "/characters/goz-speaking-256.webp",
+          "512": "/characters/goz-speaking-512.webp"
+        },
+        "dead": {
+          "128": "/characters/goz-dead-128.webp",
+          "256": "/characters/goz-dead-256.webp",
+          "512": "/characters/goz-dead-512.webp"
+        }
+      },
+      "anchors": {
+        "head_top": [
+          0.4919,
+          0.2012
+        ],
+        "face_center": [
+          0.4919,
+          0.5366
+        ],
+        "eye_line": 0.4766,
+        "body_center": [
+          0.5,
+          0.85
+        ],
+        "ground_line": 0.95,
+        "head_width": 0.5034,
+        "hat_scale": 1.2584
+      },
+      "avatar_crop": [
+        0.0892,
+        0.006,
+        0.8946,
+        0.8114
+      ],
+      "placeholder": {
+        "initial": "G"
+      }
     },
     {
       "id": "rakun",
       "name": "Rakun",
-      "description": "Maskesi yüzünden olan bir haydut rakun.",
+      "description": "Doğuştan maskeli, eli çabuk bir rakun.",
+      "description_tr": "Doğuştan maskeli, eli çabuk bir rakun.",
+      "description_en": "Raccoon born with a bandit mask; quick paws.",
+      "accent": "#3D63E0",
       "images": {
-        "512": "/characters/rakun-512.webp",
+        "128": "/characters/rakun-128.webp",
         "256": "/characters/rakun-256.webp",
-        "128": "/characters/rakun-128.webp"
+        "512": "/characters/rakun-512.webp"
       },
-      "anchors": {},
-      "placeholder": { "initial": "R" }
+      "states": {
+        "default": {
+          "128": "/characters/rakun-128.webp",
+          "256": "/characters/rakun-256.webp",
+          "512": "/characters/rakun-512.webp"
+        },
+        "speaking": {
+          "128": "/characters/rakun-speaking-128.webp",
+          "256": "/characters/rakun-speaking-256.webp",
+          "512": "/characters/rakun-speaking-512.webp"
+        },
+        "dead": {
+          "128": "/characters/rakun-dead-128.webp",
+          "256": "/characters/rakun-dead-256.webp",
+          "512": "/characters/rakun-dead-512.webp"
+        }
+      },
+      "anchors": {
+        "head_top": [
+          0.488,
+          0.1973
+        ],
+        "face_center": [
+          0.488,
+          0.5307
+        ],
+        "eye_line": 0.45,
+        "body_center": [
+          0.4995,
+          0.7807
+        ],
+        "ground_line": 0.95,
+        "head_width": 0.4283,
+        "hat_scale": 1.0707
+      },
+      "avatar_crop": [
+        0.2004,
+        0.0802,
+        0.7756,
+        0.6553
+      ],
+      "placeholder": {
+        "initial": "R"
+      }
     },
     {
       "id": "fitil",
       "name": "Fitil",
-      "description": "Kapüşonlu bir mum ruhu. Gözleri ve gülüşü alev alev.",
+      "description": "Kapüşonlu ruh; yüzü yok, sadece mum ışığı gülüşü.",
+      "description_tr": "Kapüşonlu ruh; yüzü yok, sadece mum ışığı gülüşü.",
+      "description_en": "Hooded spirit: no face, just a candle-light grin.",
+      "accent": "#C2185B",
       "images": {
-        "512": "/characters/fitil-512.webp",
+        "128": "/characters/fitil-128.webp",
         "256": "/characters/fitil-256.webp",
-        "128": "/characters/fitil-128.webp"
+        "512": "/characters/fitil-512.webp"
       },
-      "anchors": {},
-      "placeholder": { "initial": "F" }
+      "states": {
+        "default": {
+          "128": "/characters/fitil-128.webp",
+          "256": "/characters/fitil-256.webp",
+          "512": "/characters/fitil-512.webp"
+        },
+        "speaking": {
+          "128": "/characters/fitil-speaking-128.webp",
+          "256": "/characters/fitil-speaking-256.webp",
+          "512": "/characters/fitil-speaking-512.webp"
+        },
+        "dead": {
+          "128": "/characters/fitil-dead-128.webp",
+          "256": "/characters/fitil-dead-256.webp",
+          "512": "/characters/fitil-dead-512.webp"
+        }
+      },
+      "anchors": {
+        "head_top": [
+          0.4961,
+          0.1338
+        ],
+        "face_center": [
+          0.4961,
+          0.5251
+        ],
+        "eye_line": 0.45,
+        "body_center": [
+          0.4995,
+          0.7751
+        ],
+        "ground_line": 0.95,
+        "head_width": 0.3417,
+        "hat_scale": 0.8543
+      },
+      "avatar_crop": [
+        0.1904,
+        0.0354,
+        0.8018,
+        0.6468
+      ],
+      "placeholder": {
+        "initial": "F"
+      }
     },
     {
       "id": "murekkep",
       "name": "Mürekkep",
-      "description": "Boynuzlu bir mürekkep cini. Karanlıkta bile iz bırakır.",
+      "description": "Boynuzlu mürekkep cini. Sinsi gülüş, keskin bakış.",
+      "description_tr": "Boynuzlu mürekkep cini. Sinsi gülüş, keskin bakış.",
+      "description_en": "Horned ink imp in painted 2D: sly fang smile.",
+      "accent": "#B06CF0",
       "images": {
-        "512": "/characters/murekkep-512.webp",
+        "128": "/characters/murekkep-128.webp",
         "256": "/characters/murekkep-256.webp",
-        "128": "/characters/murekkep-128.webp"
+        "512": "/characters/murekkep-512.webp"
       },
-      "anchors": {},
-      "placeholder": { "initial": "M" }
+      "states": {
+        "default": {
+          "128": "/characters/murekkep-128.webp",
+          "256": "/characters/murekkep-256.webp",
+          "512": "/characters/murekkep-512.webp"
+        },
+        "speaking": {
+          "128": "/characters/murekkep-speaking-128.webp",
+          "256": "/characters/murekkep-speaking-256.webp",
+          "512": "/characters/murekkep-speaking-512.webp"
+        },
+        "dead": {
+          "128": "/characters/murekkep-dead-128.webp",
+          "256": "/characters/murekkep-dead-256.webp",
+          "512": "/characters/murekkep-dead-512.webp"
+        }
+      },
+      "anchors": {
+        "head_top": [
+          0.472,
+          0.1719
+        ],
+        "face_center": [
+          0.472,
+          0.5132
+        ],
+        "eye_line": 0.45,
+        "body_center": [
+          0.5,
+          0.7632
+        ],
+        "ground_line": 0.95,
+        "head_width": 0.3978,
+        "hat_scale": 0.9944
+      },
+      "avatar_crop": [
+        0.2046,
+        0.0822,
+        0.7395,
+        0.6172
+      ],
+      "placeholder": {
+        "initial": "M"
+      }
     },
     {
       "id": "penguen",
-      "name": "Penguen Don",
-      "description": "Smokinle doğmuş yuvarlak bir penguen baba.",
+      "name": "Penguen",
+      "description": "Smokinle doğmuş penguen baba. Yorgun ama ciddi bakışlar.",
+      "description_tr": "Smokinle doğmuş penguen baba. Yorgun ama ciddi bakışlar.",
+      "description_en": "Penguin godfather born in a tux; weary, serious eyes.",
+      "accent": "#1E8C55",
       "images": {
-        "512": "/characters/penguen-512.webp",
+        "128": "/characters/penguen-128.webp",
         "256": "/characters/penguen-256.webp",
-        "128": "/characters/penguen-128.webp"
+        "512": "/characters/penguen-512.webp"
       },
-      "anchors": {},
-      "placeholder": { "initial": "P" }
+      "states": {
+        "default": {
+          "128": "/characters/penguen-128.webp",
+          "256": "/characters/penguen-256.webp",
+          "512": "/characters/penguen-512.webp"
+        },
+        "speaking": {
+          "128": "/characters/penguen-speaking-128.webp",
+          "256": "/characters/penguen-speaking-256.webp",
+          "512": "/characters/penguen-speaking-512.webp"
+        },
+        "dead": {
+          "128": "/characters/penguen-dead-128.webp",
+          "256": "/characters/penguen-dead-256.webp",
+          "512": "/characters/penguen-dead-512.webp"
+        }
+      },
+      "anchors": {
+        "head_top": [
+          0.5053,
+          0.2344
+        ],
+        "face_center": [
+          0.5053,
+          0.5319
+        ],
+        "eye_line": 0.45,
+        "body_center": [
+          0.499,
+          0.7819
+        ],
+        "ground_line": 0.95,
+        "head_width": 0.3585,
+        "hat_scale": 0.8964
+      },
+      "avatar_crop": [
+        0.2238,
+        0.0938,
+        0.7868,
+        0.6567
+      ],
+      "placeholder": {
+        "initial": "P"
+      }
     },
     {
       "id": "teneke",
       "name": "Teneke",
-      "description": "Kurmalı teneke bir robot. Anahtarı durunca susar.",
+      "description": "Kurmalı teneke robot; lamba gözler, ızgara gülüş.",
+      "description_tr": "Kurmalı teneke robot; lamba gözler, ızgara gülüş.",
+      "description_en": "1930s wind-up tin robot with lamp eyes and a grille grin.",
+      "accent": "#E0442E",
       "images": {
-        "512": "/characters/teneke-512.webp",
+        "128": "/characters/teneke-128.webp",
         "256": "/characters/teneke-256.webp",
-        "128": "/characters/teneke-128.webp"
+        "512": "/characters/teneke-512.webp"
       },
-      "anchors": {},
-      "placeholder": { "initial": "T" }
+      "states": {
+        "default": {
+          "128": "/characters/teneke-128.webp",
+          "256": "/characters/teneke-256.webp",
+          "512": "/characters/teneke-512.webp"
+        },
+        "speaking": {
+          "128": "/characters/teneke-speaking-128.webp",
+          "256": "/characters/teneke-speaking-256.webp",
+          "512": "/characters/teneke-speaking-512.webp"
+        },
+        "dead": {
+          "128": "/characters/teneke-dead-128.webp",
+          "256": "/characters/teneke-dead-256.webp",
+          "512": "/characters/teneke-dead-512.webp"
+        }
+      },
+      "anchors": {
+        "head_top": [
+          0.496,
+          0.2686
+        ],
+        "face_center": [
+          0.496,
+          0.549
+        ],
+        "eye_line": 0.45,
+        "body_center": [
+          0.4995,
+          0.799
+        ],
+        "ground_line": 0.95,
+        "head_width": 0.4335,
+        "hat_scale": 1.0837
+      },
+      "avatar_crop": [
+        0.1875,
+        0.0779,
+        0.8046,
+        0.6951
+      ],
+      "placeholder": {
+        "initial": "T"
+      }
     }
   ]
 }

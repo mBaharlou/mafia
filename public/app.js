@@ -8,7 +8,6 @@ const voice = new Voice(socket);
 
 // ---------- art ----------
 $('skyline').innerHTML = ART.skyline();
-$('heroNarrator').innerHTML = ART.narratorCopy('H');
 $('stageNarrator').innerHTML = ART.narratorCopy('S');
 $('props').innerHTML = ART.props;
 
@@ -18,6 +17,7 @@ $('enter').onclick = () => {
   SFX.play.reveal();
   $('splash').classList.add('out');
   setTimeout(() => $('splash').remove(), 900);
+  if (matchMedia('(min-width: 901px)').matches) $('name').focus();
 };
 const sp = $('soundPanel');
 $('sndOn').checked = SFX.settings.on; $('sndMusic').value = SFX.settings.music; $('sndFx').value = SFX.settings.fx;
@@ -66,37 +66,98 @@ async function go(event, data) {
 }
 $('charForm').onsubmit = e => e.preventDefault();
 $('charGrid').addEventListener('change', e => {
-  if (e.target?.name === 'character' && e.target.value) localStorage.setItem(CHAR_KEY, e.target.value);
+  if (e.target?.name !== 'character' || !e.target.value) return;
+  localStorage.setItem(CHAR_KEY, e.target.value);
+  updatePreview();
+  refreshJoinLock();
 });
 
 function bindCharacterImage(img) {
+  const box = () => img.closest('.char-art, .layer-base, .char-summary-art, .char-hero') || img.parentElement;
   const fail = () => {
     const smaller = img.dataset.img128;
     if (smaller && img.getAttribute('src') !== smaller) { img.src = smaller; return; }
-    img.parentElement?.classList.remove('has-img');
+    box()?.classList.remove('has-img');
     img.remove();
   };
-  const show = () => { if (img.naturalWidth > 0) img.parentElement?.classList.add('has-img'); else fail(); };
+  const show = () => { if (img.naturalWidth > 0) box()?.classList.add('has-img'); else fail(); };
   img.addEventListener('load', show);
   img.addEventListener('error', fail);
   if (img.complete) show();
 }
+function charInitial(c) {
+  return String(c?.placeholder?.initial || c?.name || '?').trim().charAt(0).toLocaleUpperCase('tr') || '?';
+}
+function accentOf(c) {
+  return /^#[0-9A-Fa-f]{6}$/.test(c?.accent || '') ? c.accent : '#3A3F4B';
+}
+function stateFiles(c, state) {
+  return c?.states?.[state] || c?.states?.default || c?.images || {};
+}
+function refreshJoinLock() {
+  $('quickPlay').disabled = !($('name').value.trim() && selectedCharacter());
+}
+function updatePreview() {
+  const c = characterOf(selectedCharacter());
+  const summary = $('charSummary');
+  if (!c) {
+    summary.hidden = true;
+    $('charHeroImg').removeAttribute('src');
+    $('charHero').classList.remove('has-img');
+    $('charHeroName').textContent = '';
+    $('charHeroDesc').textContent = '';
+    $('charHeroFallback').textContent = '';
+    return;
+  }
+  const initial = charInitial(c);
+  const desc = c.description_tr || c.description || '';
+  summary.hidden = false;
+  $('charSummaryName').textContent = c.name;
+  $('charSummaryDesc').textContent = desc;
+  $('charSummaryFallback').textContent = initial;
+  const thumb = stateFiles(c, 'default')['256'] || c.images?.['256'] || '';
+  const sumImg = $('charSummaryImg');
+  if (thumb && sumImg.getAttribute('src') !== thumb) { sumImg.src = thumb; bindCharacterImage(sumImg); }
+  $('charHeroName').textContent = c.name;
+  $('charHeroDesc').textContent = desc;
+  $('charHeroFallback').textContent = initial;
+  if (!matchMedia('(min-width: 901px)').matches) return;
+  const hero = stateFiles(c, 'default')['512'] || c.images?.['512'] || thumb;
+  const heroImg = $('charHeroImg');
+  if (hero && heroImg.getAttribute('src') !== hero) { heroImg.src = hero; bindCharacterImage(heroImg); }
+}
 function renderCharGrid() {
   const saved = localStorage.getItem(CHAR_KEY) || '';
   const known = characters.some(c => c.id === saved);
+  $('charCount').textContent = `${characters.length} karakter`;
   $('charGrid').innerHTML = characters.map(c => {
-    const initial = String(c.placeholder?.initial || c.name || '?').trim().charAt(0).toLocaleUpperCase('tr');
-    const src = c.images?.['128'] || '';
-    return `<label class="char-tile">
-      <input type="radio" name="character" value="${esc(c.id)}" ${known && c.id === saved ? 'checked' : ''} aria-describedby="char-d-${esc(c.id)}">
-      <span class="char-art" aria-hidden="true"><span class="char-fallback">${esc(initial)}</span>${src ? `<img alt="" width="128" height="128" loading="lazy" decoding="async" src="${esc(src)}">` : ''}</span>
+    const initial = charInitial(c);
+    const src = stateFiles(c, 'default')['256'] || c.images?.['256'] || '';
+    return `<label class="char-tile" style="--accent:${accentOf(c)}">
+      <input type="radio" name="character" value="${esc(c.id)}" ${known && c.id === saved ? 'checked' : ''} aria-label="${esc(c.name)}" aria-describedby="char-d-${esc(c.id)}">
+      <span class="char-art" aria-hidden="true"><span class="char-fallback">${esc(initial)}</span>${src ? `<img alt="" width="256" height="256" decoding="async" src="${esc(src)}">` : ''}</span>
       <span class="char-label">${esc(c.name)}</span>
+      <span class="char-acc" aria-hidden="true"></span>
     </label>`;
   }).join('');
-  $('charDesc').innerHTML = characters.map(c => `<span class="sr-only" id="char-d-${esc(c.id)}">${esc(c.description || '')}</span>`).join('');
+  $('charDesc').innerHTML = characters.map(c => `<span class="sr-only" id="char-d-${esc(c.id)}">${esc(c.description_tr || c.description || '')}</span>`).join('');
   $('charGrid').querySelectorAll('img').forEach(bindCharacterImage);
-  $('charStatus').textContent = 'Aynı karakteri başkası da seçebilir.';
+  $('charStatus').textContent = 'Şapkalar ve kostümler yakında mağazada ✦';
+  for (const c of characters) {
+    const href = stateFiles(c, 'default')['256'];
+    if (!href || document.querySelector(`link[data-preload="${href}"]`)) continue;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = href;
+    link.dataset.preload = href;
+    document.head.appendChild(link);
+  }
+  updatePreview();
+  refreshJoinLock();
 }
+$('name').addEventListener('input', refreshJoinLock);
+matchMedia('(min-width: 901px)').addEventListener('change', updatePreview);
 fetch('/characters/characters.json').then(r => {
   if (!r.ok) throw new Error(String(r.status));
   return r.json();
@@ -271,26 +332,39 @@ function render() {
 
 function characterOf(id) { return characterById.get(id) || null; }
 
-// 128 for a phone roster and small rings, 256 once the portrait is 64px or wider.
-function seatImagePx() {
-  if (window.innerWidth <= 680 || window.innerHeight <= 500) return 128;
-  const portrait = parseFloat(getComputedStyle($('stage')).getPropertyValue('--portrait')) || 58;
-  return portrait >= 64 ? 256 : 128;
+// 128 covers a seat up to 64 CSS px at 2×. Anything larger asks for 256. 512 stays on the select preview.
+function seatCssPx() {
+  if (window.innerWidth <= 680 || window.innerHeight <= 500) return 44;
+  return parseFloat(getComputedStyle($('stage')).getPropertyValue('--portrait')) || 58;
 }
-function avatarHtml(p) {
+function seatBucket(cssPx) {
+  const dpr = window.devicePixelRatio || 1;
+  return cssPx * dpr > 128 ? '256' : '128';
+}
+function avatarHtml(p, speaking) {
   const ch = characterOf(p.characterId);
-  const initial = String(ch?.placeholder?.initial || p.name || '?').trim().charAt(0).toLocaleUpperCase('tr') || '?';
-  const img128 = ch?.images?.['128'] || '';
-  const img256 = ch?.images?.['256'] || img128;
-  const px = seatImagePx();
-  const src = px === 256 ? img256 : img128;
+  const pose = !p.alive ? 'dead' : speaking ? 'speaking' : 'default';
+  const files = stateFiles(ch, pose);
+  const img128 = files['128'] || '';
+  const img256 = files['256'] || img128;
+  const bucket = seatBucket(seatCssPx());
+  const src = files[bucket] || img128 || img256;
+  const initial = charInitial(ch) === '?' ? String(p.name || '?').trim().charAt(0).toLocaleUpperCase('tr') : charInitial(ch);
   const img = src
-    ? `<img class="avatar-img" alt="" width="${px}" height="${px}" loading="lazy" decoding="async" src="${esc(src)}" data-img128="${esc(img128)}" data-img256="${esc(img256)}">`
+    ? `<img class="avatar-img" alt="" width="${bucket}" height="${bucket}" loading="lazy" decoding="async" src="${esc(src)}" data-img128="${esc(img128)}" data-img256="${esc(img256)}">`
     : '';
-  return `<div class="pic avatar" style="--tint:${ART.tint(p.id)}">${img}<span class="avatar-fallback" aria-hidden="true">${esc(initial)}</span></div>`;
+  // layer_order: seat_bg, base, costume, hat, effect, ui_ring. Costume, hat and effect stay empty.
+  return `<div class="pic avatar disk" style="--accent:${accentOf(ch)}">
+    <span class="layer layer-bg" aria-hidden="true"></span>
+    <span class="layer layer-base">${img}<span class="avatar-fallback" aria-hidden="true">${esc(initial)}</span></span>
+    <span class="layer layer-costume" hidden></span>
+    <span class="layer layer-hat" hidden></span>
+    <span class="layer layer-effect" hidden></span>
+    <span class="layer layer-ring" aria-hidden="true"></span>
+  </div>`;
 }
 function syncAvatarResolution() {
-  const key = String(seatImagePx());
+  const key = seatBucket(seatCssPx());
   document.querySelectorAll('#stage .avatar-img').forEach(img => {
     const next = img.dataset['img' + key];
     if (next && img.getAttribute('src') !== next) img.src = next;
@@ -311,10 +385,15 @@ function renderSeats(s) {
     const showRole = role && (s.phase === 'over' || p.id !== s.myId);
     el.className = 'seat' + (p.id === s.myId ? ' me' : '') + (!p.alive ? ' dead' : '') + (p.mate ? ' mate' : '') + (speaking ? ' speaking' : '') + (showRole ? ' revealed' : '');
     el.dataset.seat = String(p.seat);
+    el.dataset.state = !p.alive ? 'dead' : speaking ? 'speaking' : 'alive';
     if (p.characterId) el.dataset.character = p.characterId;
+    const pose = !p.alive ? ', elendi' : speaking ? ', konuşuyor' : '';
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', `${p.name}, ${characterOf(p.characterId)?.name || 'oyuncu'}${pose}`);
     if (showRole) el.style.setProperty('--role', role.team === 'mafia' ? 'var(--mafia)' : 'var(--city)');
     el.innerHTML = `
-      <div class="portrait">${avatarHtml(p)}
+      <div class="portrait">${avatarHtml(p, speaking)}
+        ${p.id === s.myId ? '<span class="you">SEN</span>' : ''}
         ${p.alive && p.silenced ? '<span class="badge">🤐</span>' : p.alive && !p.connected ? '<span class="badge" title="Bağlantı koptu">📵</span>' : ''}
         ${votes ? `<span class="badge votes">${votes}</span>` : ''}
         ${speaking ? '<span class="eq"><i></i><i></i><i></i><i></i></span>' : ''}
