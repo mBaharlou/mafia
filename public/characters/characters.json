@@ -85,8 +85,8 @@
     {
       "id": "pelus",
       "name": "Peluş",
-      "description": "Pelüş dedektif ayı. Herkesten şüphelenir, ama çok kibarca.",
-      "description_tr": "Pelüş dedektif ayı. Herkesten şüphelenir, ama çok kibarca.",
+      "description": "Peluş dedektif ayı. Herkesten şüphelenir, ama çok kibarca.",
+      "description_tr": "Peluş dedektif ayı. Herkesten şüphelenir, ama çok kibarca.",
       "description_en": "Plush detective bear who politely suspects everyone.",
       "accent": "#1FA59C",
       "images": {
