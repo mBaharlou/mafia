@@ -177,7 +177,16 @@
   function whenReady(fn) { readyFn = fn; if (manifest) fn(); }
   function sceneOf(s) { return resolveSceneId(manifest, s && s.sceneId); }
   function wanted(s) {
-    return !!(manifest && s && s.sceneId);
+    return !!(manifest && s && s.sceneId && s.phase !== 'lobby' && s.phase !== 'starting');
+  }
+
+  function lobbyPlate(sceneId) {
+    if (!manifest) return null;
+    const id = resolveSceneId(manifest, sceneId);
+    const scene = manifest.scenes[id];
+    const layout = isPhone() ? 'phone' : 'desktop';
+    const bg = (scene.bg && (scene.bg[layout] || scene.bg.desktop)) || {};
+    return { id, night: bg.night, kahin: fileFor(manifest.kahin.files.idle, isPhone() ? 200 : 420) };
   }
 
   let preloadedLayout = '';
@@ -874,6 +883,6 @@
 
   document.fonts?.ready.then(() => { if (current && shown) placeFlags(); });
 
-  root.Scene = { load, whenReady, wanted, sync, hide, preloadLobby, layoutSeats, resolveCharacterId, resolveSceneId, resolveFlagSkin };
+  root.Scene = { load, whenReady, wanted, sync, hide, preloadLobby, lobbyPlate, layoutSeats, resolveCharacterId, resolveSceneId, resolveFlagSkin };
   load();
 })(typeof window !== 'undefined' ? window : globalThis);

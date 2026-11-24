@@ -180,18 +180,31 @@ test('a game shares one scene id, and resume keeps it', { timeout: 120000 }, asy
     boxes.push(track(host));
     await once(host, 'connect');
     host.emit('create', { name: 'Host', size: 9, characterId: 'fitil' });
-    await waitFor(() => boxes[0].state && boxes[0].state.phase === 'lobby');
-    assert.equal(boxes[0].state.sceneId, null);
+    await waitFor(() => boxes[0].state && boxes[0].state.phase === 'lobby' && SCENE_IDS.includes(boxes[0].state.sceneId));
+    const sceneId = boxes[0].state.sceneId;
     const code = boxes[0].code;
-    for (let i = 1; i < 9; i++) {
+    const created = rooms.get(code);
+    assert.equal(created.sceneId, sceneId);
+    created.sceneId = 'nope';
+    assert.equal(created.view(created.players[0]).sceneId, 'meydan');
+    created.sceneId = sceneId;
+    created.broadcast();
+    await waitFor(() => boxes[0].state.sceneId === sceneId);
+
+    const joiner = open();
+    boxes.push(track(joiner));
+    await once(joiner, 'connect');
+    joiner.emit('join', { name: 'P1', code, characterId: ids[1] });
+    await waitFor(() => boxes[1].state && boxes[1].state.phase === 'lobby');
+    assert.equal(boxes[1].state.sceneId, sceneId);
+
+    for (let i = 2; i < 9; i++) {
       const c = open();
       boxes.push(track(c));
       await once(c, 'connect');
       c.emit('join', { name: 'P' + i, code, characterId: ids[i % ids.length] });
     }
-    await waitFor(() => boxes.every(b => b.state && b.state.phase !== 'lobby' && b.state.phase !== 'starting' && b.state.sceneId));
-    const sceneId = boxes[0].state.sceneId;
-    assert.ok(SCENE_IDS.includes(sceneId), sceneId);
+    await waitFor(() => boxes.every(b => b.state && b.state.phase !== 'lobby' && b.state.phase !== 'starting'));
     for (const b of boxes) assert.equal(b.state.sceneId, sceneId);
 
     const gone = clients[4];
@@ -208,10 +221,15 @@ test('a game shares one scene id, and resume keeps it', { timeout: 120000 }, asy
 
     const room = rooms.get(code);
     room.reset();
-    assert.equal(room.sceneId, null);
-    room.start();
+    assert.equal(room.phase, 'lobby');
     assert.ok(SCENE_IDS.includes(room.sceneId));
-    await waitFor(() => boxes[0].state && boxes[0].state.sceneId === room.sceneId && boxes[0].state.phase !== 'lobby');
+    const replay = room.sceneId;
+    room.start();
+    assert.equal(room.sceneId, replay);
+    room.sceneId = 'sahne';
+    room.start();
+    assert.equal(room.sceneId, 'meydan');
+    await waitFor(() => boxes[0].state && boxes[0].state.sceneId === 'meydan' && boxes[0].state.phase !== 'lobby');
 
     for (const c of clients) c.close();
     clients.length = 0;
@@ -230,7 +248,7 @@ test('a game shares one scene id, and resume keeps it', { timeout: 120000 }, asy
       bots.push(c);
       c.on('state', s => {
         seen.phases.add(s.phase);
-        if (s.phase !== 'lobby' && s.phase !== 'starting') {
+        if (s.sceneId) {
           if (!SCENE_IDS.includes(s.sceneId)) seen.error = 'bad scene ' + s.sceneId;
           else if (!seen.sceneId) seen.sceneId = s.sceneId;
           else if (s.sceneId !== seen.sceneId) seen.error = 'scene changed ' + seen.sceneId + ' -> ' + s.sceneId;
