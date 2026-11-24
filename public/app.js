@@ -8,8 +8,6 @@ const voice = new Voice(socket);
 
 // ---------- art ----------
 $('skyline').innerHTML = ART.skyline();
-$('stageNarrator').innerHTML = ART.narratorCopy('S');
-$('props').innerHTML = ART.props;
 
 // ---------- intro, sound, parallax ----------
 $('enter').onclick = () => {
@@ -289,7 +287,7 @@ addEventListener('beforeunload', e => {
 function showHome() {
   $('home').classList.remove('hidden'); $('room').classList.add('hidden'); $('topnav').classList.remove('hidden');
   document.documentElement.dataset.phase = 'night'; FX.mode('night'); SFX.mode('night'); SFX.duck(false);
-  document.body.classList.remove('scene-on');
+  document.body.classList.remove('scene-on', 'lobby-on');
   Scene.hide();
   $('sceneNarr').hidden = true;
 }
@@ -323,13 +321,15 @@ function render() {
   if (sub$.textContent !== text) {
     if (prevPhase && /oyundan çıktı|vurdu|götürdü/.test(text)) SFX.play.death();
     sub$.textContent = text; sub$.classList.remove('pop'); void sub$.offsetWidth; sub$.classList.add('pop'); }
+  paintLobby(s);
   const sceneOn = Scene.wanted(s);
+  const lobbyOn = !sceneOn && (s.phase === 'lobby' || s.phase === 'starting');
   document.body.classList.toggle('scene-on', sceneOn);
+  document.body.classList.toggle('lobby-on', lobbyOn);
   $('sceneNarr').hidden = !sceneOn;
   if (sceneOn) $('sceneNarr').textContent = text;
   if (sceneOn) Scene.sync(s);
   else Scene.hide();
-  $('stage').classList.toggle('talking', ['morning', 'announce', 'coin', 'roles', 'starting', 'over'].includes(s.phase));
   renderSeats(s);
   renderRole(s);
   renderAction(s);
@@ -390,7 +390,6 @@ function renderSeats(s) {
   const n = s.size;
   stage.dataset.size = n;
   s.players.forEach(p => {
-    // seats run clockwise around the table, leaving the top free for the narrator
     const el = document.createElement('div');
     const speaking = s.speaker?.id === p.id;
     const role = p.role && s.roles[p.role];
@@ -417,155 +416,165 @@ function renderSeats(s) {
     el.querySelectorAll('.avatar-img').forEach(bindCharacterImage);
     stage.appendChild(el);
   });
-  layoutTable();
+  layoutSeats();
 }
 
-// Fit every nickname on the oval. When the stage is too narrow or the window is too short
-// (a phone on its side), seats become a wrapping roster instead of an overlapping ring.
+// Lobby seats sit on the scene plate: a ring on a wide screen, a grid on a phone.
 let layoutLock = false;
-function layoutTable() {
+function lobbyPhone() {
+  return matchMedia('(max-width: 800px)').matches || innerHeight <= 500;
+}
+function lobbySafe() {
+  const W = innerWidth, H = innerHeight;
+  if (lobbyPhone()) {
+    const top = Math.min(148, Math.round(H * 0.18));
+    const bottom = Math.min(236, Math.round(H * 0.30));
+    return { x: 8, y: top, w: Math.max(140, W - 16), h: Math.max(200, H - top - bottom), phone: true };
+  }
+  const left = Math.min(380, Math.round(W * 0.2));
+  const right = Math.min(380, Math.round(W * 0.2));
+  const top = 108;
+  const bottom = Math.min(270, Math.round(H * 0.26));
+  return { x: left, y: top, w: Math.max(280, W - left - right), h: Math.max(280, H - top - bottom), phone: false };
+}
+function placeKahin(footX, footY, h) {
+  const el = $('lobbyKahin');
+  if (!el) return;
+  el.hidden = false;
+  const w = h * 0.75;
+  el.style.height = h + 'px';
+  el.style.width = w + 'px';
+  el.style.left = (footX - w / 2) + 'px';
+  el.style.top = (footY - h * 0.97) + 'px';
+}
+function rectsOverlap(a, b) {
+  return Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1
+    && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+}
+function kahinBody() {
+  const el = $('lobbyKahin');
+  if (!el || el.hidden) return null;
+  const r = el.getBoundingClientRect();
+  if (!r.width || !r.height) return null;
+  // Idle sprite's opaque box, so heads can sit in the empty canvas margin.
+  return {
+    left: r.left + r.width * 0.24,
+    right: r.left + r.width * 0.75,
+    top: r.top + r.height * 0.07,
+    bottom: r.top + r.height * 0.97,
+    width: r.width,
+  };
+}
+function seatsHit(seats) {
+  const rects = seats.map(el => el.getBoundingClientRect());
+  const kahin = kahinBody();
+  const blocks = [...document.querySelectorAll('.hud, #action, #historyPanel')]
+    .filter(el => !el.hidden && !el.classList.contains('hidden'))
+    .map(el => el.getBoundingClientRect())
+    .filter(r => r.width > 8 && r.height > 8);
+  for (let i = 0; i < rects.length; i++) {
+    const a = rects[i];
+    if (a.width < 2) continue;
+    if (a.left < 1 || a.top < 1 || a.right > innerWidth - 1 || a.bottom > innerHeight - 1) return true;
+    if (kahin && rectsOverlap(a, kahin)) return true;
+    if (blocks.some(b => rectsOverlap(a, b))) return true;
+    for (let j = i + 1; j < rects.length; j++) if (rectsOverlap(a, rects[j])) return true;
+  }
+  return false;
+}
+function paintLobby(s) {
+  const on = !!(s && (s.phase === 'lobby' || s.phase === 'starting'));
+  const stage = $('stage');
+  const bg = $('lobbyBg');
+  const kahin = $('lobbyKahin');
+  if (!on) {
+    stage?.classList.remove('is-lobby');
+    if (bg) bg.hidden = true;
+    if (kahin) kahin.hidden = true;
+    return;
+  }
+  stage.classList.add('is-lobby');
+  const plate = Scene.lobbyPlate?.(s.sceneId);
+  if (!plate || !bg || !kahin) return;
+  if (bg.dataset.url !== plate.night) {
+    bg.dataset.url = plate.night;
+    bg.style.backgroundImage = `url("${plate.night}")`;
+  }
+  bg.hidden = false;
+  const img = $('lobbyKahinImg');
+  if (img && img.getAttribute('src') !== plate.kahin) img.src = plate.kahin;
+  kahin.hidden = false;
+}
+function layoutSeats() {
   const stage = $('stage');
   if (!stage || layoutLock || $('room').classList.contains('hidden') || document.body.classList.contains('scene-on')) return;
   layoutLock = true;
   try {
     const seats = [...stage.querySelectorAll('.seat')];
-    const n = Number(stage.dataset.size) || seats.length || 9;
-    const W = stage.clientWidth || stage.parentElement?.clientWidth || window.innerWidth;
-    const short = window.innerHeight <= 500;
-    const narrow = window.innerWidth <= 680 || W < 560;
-    const clearScenery = () => {
-      for (const el of [stage.querySelector('.stage-narrator'), stage.querySelector('.table')]) {
-        if (!el) continue;
-        el.style.height = el.style.width = el.style.left = el.style.right = el.style.top = el.style.transform = '';
-      }
-    };
-    const useRoster = () => {
-      stage.classList.add('is-roster');
-      stage.style.height = stage.style.minHeight = stage.style.maxHeight = '';
-      for (const seat of seats) seat.style.left = seat.style.top = '';
-      clearScenery();
-    };
     layoutPanels();
-    if (!seats.length || short || narrow) { useRoster(); return; }
-
-    const portrait = n >= 16 ? (W >= 1100 ? 64 : 52) : n >= 12 ? (W >= 1100 ? 72 : 58) : (W >= 1100 ? 80 : 66);
-    stage.style.setProperty('--portrait', portrait + 'px');
-    const gap = 8;
-    const sideN = { 9: 2, 12: 3, 16: 4 }[n] || 2;
-    const topN = { 9: 3, 12: 3, 16: 4 }[n] || 3;
-    const botN = { 9: 2, 12: 3, 16: 4 }[n] || 2;
-    const measure = plateW => {
-      stage.style.setProperty('--plate-w', plateW + 'px');
-      let h = portrait + 28;
-      for (const seat of seats) h = Math.max(h, seat.offsetHeight);
-      return h;
-    };
-    // Seats sit on a rectangle so 16 full nicknames stay readable. The top edge
-    // is split, leaving the narrator in the middle.
-    const orbit = (w, h, extra) => {
-      const yTop = h / 2 + 8;
-      const ySide0 = yTop + h + gap;
-      const sideSpan = Math.max(0, (sideN - 1) * (h + gap)) + extra;
-      const ySide1 = ySide0 + sideSpan;
-      const yBot = ySide1 + h + gap;
-      const H = Math.ceil(yBot + h / 2 + 8);
-      const xL = w / 2 + 6, xR = W - w / 2 - 6;
-      const row = (count, y, x0, x1, reverse) => {
-        const pts = [];
-        for (let i = 0; i < count; i++) {
-          const t = count === 1 ? .5 : i / (count - 1);
-          pts.push({ x: x0 + (x1 - x0) * t, y });
-        }
-        return reverse ? pts.reverse() : pts;
-      };
-      const col = (count, x, y0, y1, reverse) => {
-        const pts = [];
-        for (let i = 0; i < count; i++) {
-          const t = count === 1 ? .5 : i / (count - 1);
-          pts.push({ x, y: y0 + (y1 - y0) * t });
-        }
-        return reverse ? pts.reverse() : pts;
-      };
-      const leftN = Math.ceil(topN / 2);
-      const pts = [
-        ...row(leftN, yTop, xL, Math.min(W * .30, xR - w)),
-        ...row(topN - leftN, yTop, Math.max(W * .70, xL + w), xR),
-        ...col(sideN, xR, ySide0, ySide1),
-        ...row(botN, yBot, xL, xR, true),
-        ...col(sideN, xL, ySide0, ySide1, true),
-      ];
-      const hit = pts.some((p, i) => pts.some((q, j) => j > i && Math.abs(p.x - q.x) < w + 4 && Math.abs(p.y - q.y) < h + 4));
-      const inside = pts.every(p => p.x - w / 2 >= 0 && p.x + w / 2 <= W && p.y - h / 2 >= 0 && p.y + h / 2 <= H);
-      return pts.length === n && !hit && inside ? { pts, H, yTop } : null;
-    };
-
-    stage.classList.remove('is-roster');
-    let solved = null;
-    const widest = Math.min(168, Math.max(124, Math.floor((W - 48) / 4)));
-    for (let w = widest; w >= 108; w -= 8) {
-      const h = measure(w);
-      solved = orbit(w, h, 0);
-      if (solved) { solved.w = w; solved.h = h; break; }
+    if (!stage.classList.contains('is-lobby')) {
+      stage.style.height = stage.style.minHeight = '';
+      for (const seat of seats) seat.style.left = seat.style.top = '';
+      return;
     }
-    if (!solved) { useRoster(); return; }
-
-    const roomFor = window.innerHeight - 120;
-    if (roomFor > solved.H + 24) {
-      const extra = Math.min(roomFor - solved.H, 200);
-      const grown = orbit(solved.w, solved.h, extra);
-      if (grown) { grown.w = solved.w; grown.h = solved.h; solved = grown; }
-    }
-    stage.style.setProperty('--plate-w', solved.w + 'px');
-    stage.style.height = solved.H + 'px';
-    stage.style.minHeight = solved.H + 'px';
-    stage.style.maxHeight = 'none';
-    for (const seat of seats) {
-      const p = solved.pts[Number(seat.dataset.seat)];
-      if (!p) continue;
-      seat.style.left = p.x + 'px';
-      seat.style.top = p.y + 'px';
-    }
-
-    const narrator = stage.querySelector('.stage-narrator');
-    const table = stage.querySelector('.table');
-    if (narrator) {
-      const nH = Math.min(portrait * 2.8, solved.H * 0.28, 200);
-      narrator.style.height = nH + 'px';
-      narrator.style.width = '';
-      narrator.style.left = '50%';
-      narrator.style.right = 'auto';
-      narrator.style.top = Math.max(0, solved.yTop - nH * 0.42) + 'px';
-      narrator.style.transform = 'translateX(-50%)';
-    }
-    if (table) {
-      const tW = Math.min(W - solved.w * 2 - 36, W * 0.52);
-      const tH = Math.min(solved.H - solved.h * 2 - 36, solved.H * 0.42);
-      table.style.width = Math.max(160, tW) + 'px';
-      table.style.height = Math.max(110, tH) + 'px';
-      table.style.left = (W - Math.max(160, tW)) / 2 + 'px';
-      table.style.right = 'auto';
-      table.style.top = (solved.H - Math.max(110, tH)) / 2 + 16 + 'px';
-      table.style.transform = '';
-    }
-    const rects = seats.map(el => el.getBoundingClientRect());
-    const stageBox = stage.getBoundingClientRect();
-    let bad = rects.some(r => r.left < -2 || r.right > window.innerWidth + 2 || r.top < stageBox.top - 8 || r.bottom > stageBox.bottom + 8);
-    for (let i = 0; i < rects.length && !bad; i++) {
-      for (let j = i + 1; j < rects.length; j++) {
-        const dx = Math.min(rects[i].right, rects[j].right) - Math.max(rects[i].left, rects[j].left);
-        const dy = Math.min(rects[i].bottom, rects[j].bottom) - Math.max(rects[i].top, rects[j].top);
-        if (dx > 1 && dy > 1) { bad = true; break; }
-      }
-    }
-    if (!bad) {
-      for (const el of stage.querySelectorAll('.plate, .tag')) {
-        if (el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2) { bad = true; break; }
-      }
-    }
-    if (bad) useRoster();
+    stage.style.height = innerHeight + 'px';
+    stage.style.minHeight = innerHeight + 'px';
+    if (lobbyPhone()) layoutLobbyGrid(stage, seats);
+    else layoutLobbyRing(stage, seats);
   } finally {
     syncAvatarResolution();
     layoutLock = false;
+  }
+}
+function layoutLobbyRing(stage, seats) {
+  const box = lobbySafe();
+  const n = seats.length;
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h * 0.5;
+  const portrait = n <= 1 ? 96 : n >= 16 ? 48 : n >= 8 ? 64 : 78;
+  const plate = n >= 16 ? 96 : n >= 8 ? 118 : 136;
+  const kahinH = Math.min(box.h * (n <= 1 ? 0.62 : 0.46), n >= 16 ? 300 : 420);
+  const spread = n <= 1 ? 0.36 : n <= 4 ? 0.7 : 1;
+  stage.style.setProperty('--portrait', portrait + 'px');
+  stage.style.setProperty('--plate-w', plate + 'px');
+  const seatH = portrait + 32;
+  const rx = Math.max(120, (box.w / 2 - plate / 2 - 8) * spread);
+  const ry = Math.max(96, (box.h / 2 - seatH / 2 - 6) * spread);
+  const gap = n >= 12 ? 0.2 : 0.26;
+  placeKahin(cx, cy + 6, kahinH);
+  seats.forEach((seat, i) => {
+    const a = n <= 1 ? Math.PI / 2 : (-Math.PI / 2 + Math.PI * gap) + (2 * Math.PI * (1 - gap)) * (i / Math.max(1, n - 1));
+    seat.style.left = (cx + rx * Math.cos(a)) + 'px';
+    seat.style.top = (cy + ry * Math.sin(a)) + 'px';
+  });
+}
+function layoutLobbyGrid(stage, seats) {
+  const box = lobbySafe();
+  const n = seats.length;
+  const cols = n <= 1 ? 1 : n <= 4 ? 2 : 4;
+  const rows = Math.max(1, Math.ceil(n / cols));
+  let portrait = n >= 16 ? 40 : 48;
+  let kahinH = n >= 16 ? Math.min(118, box.h * 0.24) : n >= 8 ? Math.min(156, box.h * 0.3) : Math.min(210, box.h * 0.4);
+  const place = () => {
+    const gridTop = box.y + kahinH + 8;
+    const gridH = Math.max(portrait + 30, box.y + box.h - gridTop);
+    const cellW = box.w / cols;
+    const cellH = gridH / rows;
+    stage.style.setProperty('--portrait', portrait + 'px');
+    stage.style.setProperty('--plate-w', Math.max(72, Math.floor(cellW - 8)) + 'px');
+    placeKahin(box.x + box.w / 2, box.y + kahinH * 0.97, kahinH);
+    seats.forEach((seat, i) => {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      seat.style.left = (box.x + cellW * (c + 0.5)) + 'px';
+      seat.style.top = (gridTop + cellH * r + Math.min(cellH * 0.42, portrait / 2 + 6)) + 'px';
+    });
+  };
+  place();
+  for (let attempt = 0; attempt < 5 && seats.length && seatsHit(seats); attempt++) {
+    portrait = Math.max(32, portrait - 4);
+    kahinH = Math.max(84, kahinH - 14);
+    place();
   }
 }
 
@@ -583,12 +592,13 @@ function layoutPanels() {
     action.classList.remove('action-lead');
   }
 }
-stackMq.addEventListener('change', () => { layoutPanels(); layoutTable(); });
+stackMq.addEventListener('change', () => { layoutPanels(); layoutSeats(); });
 addEventListener('resize', () => {
   if (document.body.classList.contains('kb-open')) return;
-  layoutTable();
+  if (state && (state.phase === 'lobby' || state.phase === 'starting')) paintLobby(state);
+  layoutSeats();
 });
-document.fonts?.ready.then(() => { if (state) { layoutTable(); if (Scene.wanted(state)) Scene.sync(state); } });
+document.fonts?.ready.then(() => { if (state) { layoutSeats(); if (Scene.wanted(state)) Scene.sync(state); } });
 Scene.whenReady(() => { Scene.preloadLobby(); if (state) render(); });
 layoutPanels();
 

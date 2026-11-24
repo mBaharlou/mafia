@@ -868,8 +868,8 @@
  "ids_note": "Character ids are final and identical to the MAFIA-4 pack folders: vinil, pelus, goz, rakun, fitil, murekkep, penguen, teneke.",
  "scene_selection": {
   "pool": "all scenes with status \"active\" (now: meydan, cember)",
-  "who_picks": "server, once, at game start (uniform random over the pool; optional weights field later)",
-  "broadcast": "the server sends scene_id in the game-start / room-state payload; every client renders that id, so all players see the same scene; reconnecting clients get it from the room state",
+  "who_picks": "server, once, at room creation (uniform random over the pool; optional weights field later). The lobby, resume and the first game share that id. reset() after a game has been created picks again, so a later game in the same room can change scene. start() does not re-pick.",
+  "broadcast": "the server sends scene_id in every room-state payload, including the lobby; every client renders that id, so all players see the same scene; reconnecting clients get it from the room state",
   "preload": "during the lobby, clients preload BOTH active scenes (night+day for their layout, about 0.6 MB webp per scene on phone) plus all character sprites, so the reveal has no pop-in",
   "fallback": "unknown scene_id → meydan",
   "adding_a_scene": "add an entry under scenes with id, bg (night+day x desktop+phone), desktop/phone layout params, status. Paid or seasonal scenes later add tier:\"paid\" and an entitlement key; the pool filter then decides who sees it (room host entitlement)."

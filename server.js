@@ -166,6 +166,9 @@ if (!SCENE_IDS.length) throw new Error('scene-manifest: no active scenes');
 function pickSceneId() {
   return SCENE_IDS[crypto.randomInt(SCENE_IDS.length)];
 }
+function knownScene(id) {
+  return SCENE_IDS.includes(id) ? id : 'meydan';
+}
 
 // { id } or { error: 'missing' | 'type' | 'oversize' | 'unknown' }.
 // The same id may be used by more than one player (16 seats, 8 characters).
@@ -338,13 +341,15 @@ class Room {
     this.activityAt = Date.now();
     this.emptyAt = 0;
     this.players = []; // {id, token, name, characterId, socketId, connected, nonce, ip, sid}
+    // Lobby and the first game share this id. reset() after a game picks again.
+    this.sceneId = pickSceneId();
     this.reset();
   }
 
   reset() {
+    const played = !!this.g;
     clearTimeout(this.timer);
     this.phase = 'lobby';
-    this.sceneId = null;
     this.g = null;
     this.history = [];
     this.logs = {};
@@ -353,6 +358,9 @@ class Room {
     this.deadReveal = null;
     this.speaker = null;
     this.narrator = '';
+    // Rematch picks a new scene for the next lobby and the game after it. start() does not.
+    if (played) this.sceneId = pickSceneId();
+    else if (this.sceneId && !SCENE_IDS.includes(this.sceneId)) this.sceneId = 'meydan';
   }
 
   // ---------- phase plumbing ----------
@@ -391,7 +399,7 @@ class Room {
   }
 
   start() {
-    this.sceneId = pickSceneId();
+    this.sceneId = knownScene(this.sceneId);
     this.g = G.createGame(G.shuffle(this.players));
     this.mafiaCount = this.g.players.filter(p => p.team === 'mafia').length;
     this.set('roles', SECS.roles, () => this.startSpeeches(true), 'Rolüne bak ve kimseye söyleme! 🤫');
@@ -634,7 +642,7 @@ class Room {
     // Dead mafia see only the public board. Living mafia, from night 1 on, see teammates, the kill and the chat.
     const mafiaEyes = !!(me && me.alive && me.team === 'mafia' && g.night >= 1);
     const v = {
-      code: this.code, size: this.size, phase: this.phase, sceneId: this.sceneId, myId: p.id,
+      code: this.code, size: this.size, phase: this.phase, sceneId: knownScene(this.sceneId), myId: p.id,
       left: this.deadline ? Math.max(0, this.deadline - Date.now()) : null,
       total: this.duration,
       narrator: this.narrator, history: this.history.slice(-30), logs: this.logs[p.id] || [],
